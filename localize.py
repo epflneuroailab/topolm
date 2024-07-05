@@ -9,7 +9,7 @@ import pickle as pkl
 import scipy
 
 DUMP_PATH = 'data/topotest-extract.pkl'
-SAVE_PATH = 'figures/topotest-lmask.png'
+SAVE_PATH = 'figures/topotest-lmask-all.png'
 
 def is_topk(a, k=1):
     _, rix = np.unique(-a, return_inverse=True)
@@ -45,17 +45,23 @@ if __name__ == "__main__":
 
     print(desc)
 
-    sns.heatmap(language_mask)
+    fig, axes = plt.subplots(4, 4, figsize=(15, 15))
 
-    plt.title(desc)
-    plt.xlabel('units')
-    plt.ylabel('layers')
+    for i, ax in enumerate(axes.flatten()):
+        sns.heatmap(language_mask[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'viridis')
+        ax.set_title(f'layer {i}')
+        ax.axis('off')
 
+    plt.tight_layout()
     plt.savefig(SAVE_PATH)
 
-    plt.clf()
-    plt.cla()
-    plt.close()
-    
+    # sns.heatmap(language_mask)
+
+    # plt.title(desc)
+    # plt.xlabel('units')
+    # plt.ylabel('layers')
+
+    # plt.savefig(SAVE_PATH)
+
     with open(f'data/topotest-lmask.pkl', 'wb') as f:
         pkl.dump(language_mask, f)
