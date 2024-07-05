@@ -8,7 +8,7 @@ from tqdm import tqdm
 import pickle as pkl
 import scipy
 
-DUMP_PATH = 'dumps/topotest-extract.pkl'
+DUMP_PATH = 'data/topotest-extract.pkl'
 SAVE_PATH = 'figures/topotest-lmask.png'
 
 def is_topk(a, k=1):
@@ -57,5 +57,5 @@ if __name__ == "__main__":
     plt.cla()
     plt.close()
     
-    with open(f'dumps/topotest-lmask.pkl', 'wb') as f:
+    with open(f'data/topotest-lmask.pkl', 'wb') as f:
         pkl.dump(language_mask, f)

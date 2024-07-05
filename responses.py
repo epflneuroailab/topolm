@@ -19,8 +19,8 @@ from torch.utils.data import Dataset, DataLoader
 log = logging.getLogger(__name__)
 
 MODEL_FILE = '~/projects/topo-eval/outputs/topotest/checkpoints/ScriptableMaskedLM_2024-07-03_9.9417/model.pth'
-MASK_FILE = '~/projects/topo-eval/dumps/topotest-lmask.pkl'
-SAVEPATH = '~/projects/topo-eval/dumps/topotest-responses.pkl'
+MASK_FILE = '~/projects/topo-eval/data/topotest-lmask.pkl'
+SAVEPATH = '~/projects/topo-eval/data/topotest-responses.pkl'
 STIMULI_FILE = '~/projects/topo-eval/fedorenko_response_stimuli/responses.csv'
 
 activations = defaultdict(list)

@@ -2,13 +2,14 @@
 
 evaluating topographic language models
 
-## localization
-run `extract.py`
+* `extract.py`, `localize.py`, and `responses.py` are scripts for running localization and getting response profiles
+* `data` stores saved model activations
+* `cramming` is a module for training / running topoformer-bert
 
 ## dependencies
 basics:
 * `torch`
-* `R`
+* `R` / `tidyr`
 * `tqdm`
 
 the topoformer-bert code is written on top of the [cramming](https://github.com/JonasGeiping/cramming) repository, which requires
