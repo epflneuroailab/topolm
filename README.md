@@ -2,6 +2,9 @@
 
 evaluating topographic language models
 
+## localization
+run `extract.py`
+
 ## dependencies
 basics:
 * `torch`

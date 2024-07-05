@@ -19,7 +19,7 @@ from torch.utils.data import Dataset, DataLoader
 log = logging.getLogger(__name__)
 
 MODEL_FILE = '~/projects/topo-eval/outputs/topotest/checkpoints/ScriptableMaskedLM_2024-07-03_9.9417/model.pth'
-SAVEPATH = '~/projects/topo-eval/dumps/topotest.pkl'
+SAVEPATH = '~/projects/topo-eval/dumps/topotest-extract.pkl'
 FEDORENKO_DIR = '~/projects/topo-eval/fedorenko10_stimuli'
 
 attentions = defaultdict(lambda: {'sents': [], 'non_words': []})
@@ -158,4 +158,3 @@ def launch(cfg):
 
 if __name__ == "__main__":
     launch()
-
