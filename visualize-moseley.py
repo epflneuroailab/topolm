@@ -24,16 +24,13 @@ if __name__ == "__main__":
 
     layer_names = [f'encoder.layers.{i}.attn.dense' for i in range(16)]
     all_conditions = ['abstract_noun', 'abstract_verb', 'concrete_noun', 'concrete_verb']
-
-    global_min = np.min([np.min(d) for condition in data for d in data[condition]])
-    global_max = np.max([np.max(d) for condition in data for d in data[condition]])
-
+    
     for condition in all_conditions:
 
         fig, axes = plt.subplots(4, 4, figsize=(15, 15))
 
         for i, ax in enumerate(axes.flatten()):
-            sns.heatmap(data[condition][i].reshape(28, 28), ax = ax, cbar = False, cmap = 'viridis', vmin=global_min, vmax=global_max)
+            sns.heatmap(data[condition][i].reshape(28, 28), ax = ax, cbar = False, center = 0)
             ax.set_title(f'layer {i}')
             ax.axis('off')
 

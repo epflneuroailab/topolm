@@ -48,7 +48,7 @@ if __name__ == "__main__":
     fig, axes = plt.subplots(4, 4, figsize=(15, 15))
 
     for i, ax in enumerate(axes.flatten()):
-        sns.heatmap(language_mask[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'viridis')
+        sns.heatmap(language_mask[i].reshape(28, 28), ax = ax, cbar = False, center = 0)
         ax.set_title(f'layer {i}')
         ax.axis('off')
 

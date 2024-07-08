@@ -26,9 +26,9 @@ if __name__ == "__main__":
     activations = np.array([data['sentences'][layer_name].mean(axis = 0) for layer_name in layer_names])
 
     fig, axes = plt.subplots(4, 4, figsize=(15, 15))
-
+    
     for i, ax in enumerate(axes.flatten()):
-        sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'viridis')
+        sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar=i == 15, cbar_ax=None if i != 15 else cbar_ax, center = 0)
         ax.set_title(f'layer {i}')
         ax.axis('off')
 
