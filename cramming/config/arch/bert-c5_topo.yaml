@@ -35,7 +35,7 @@ attention:
   type: topoformer # changed it from flash!
   causal_attention: False
   num_attention_heads: 1
-  dropout_prob: 0
+  dropout_prob: 0.1
   skip_output_projection: False
   qkv_bias: False
 

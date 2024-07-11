@@ -108,10 +108,10 @@ def system_startup(cfg):
     max_dataset_memory = f"{psutil.virtual_memory().total // 2 // max(torch.cuda.device_count(), 1)}"
     os.environ["HF_DATASETS_IN_MEMORY_MAX_SIZE"] = max_dataset_memory
 
-    if not torch.cuda.is_available() and not cfg.dryrun:
-        raise ValueError(
-            f"No GPU allocated to this process on {socket.gethostname()} with name {cfg.name}. Running in CPU-mode is likely an error."
-        )
+    # if not torch.cuda.is_available() and not cfg.dryrun:
+    #     raise ValueError(
+    #         f"No GPU allocated to this process on {socket.gethostname()} with name {cfg.name}. Running in CPU-mode is likely an error."
+    #     )
 
     # Force thread reduction for all cases:
     torch.set_num_threads(min(torch.get_num_threads(), cfg.impl.threads))

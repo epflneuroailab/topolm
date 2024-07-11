@@ -8,8 +8,8 @@ from tqdm import tqdm
 import pickle as pkl
 import scipy
 
-DUMP_PATH = 'data/topotest-extract.pkl'
-SAVE_PATH = 'figures/topotest-lmask-all.png'
+DUMP_PATH = 'data/topobert/extract.pkl'
+SAVE_PATH = 'figures/topobert/lmask-all.png'
 
 def is_topk(a, k=1):
     _, rix = np.unique(-a, return_inverse=True)
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     with open(DUMP_PATH, 'rb') as f:
         data = pkl.load(f)
 
-    layer_names = [f'encoder.layers.{i}.attn.dense' for i in range(16)]
+    layer_names = [f'encoder.layers.{i}.attn.self_attention.output_projection' for i in range(16)]
 
     num_units = data['sentences'][layer_names[0]].shape[-1]
 
@@ -36,7 +36,12 @@ if __name__ == "__main__":
 
         t_values_matrix[layer_idx], p_values_matrix[layer_idx] = scipy.stats.ttest_ind(sentences_actv, non_words_actv, axis=0, equal_var=False)
 
-    language_mask = is_topk(t_values_matrix, k=num_units)
+    adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
+    adjusted_p_values = adjusted_p_values.reshape((len(layer_names), num_units))
+    language_mask = (adjusted_p_values < 0.01) & (t_values_matrix > 0) 
+    language_prob_mask = 1 - (adjusted_p_values * (t_values_matrix > 0))
+
+    # language_mask = is_topk(t_values_matrix, k=num_units)
     
     num_active_units = language_mask.sum()
     total_num_units = np.prod(language_mask.shape)
@@ -63,5 +68,5 @@ if __name__ == "__main__":
 
     # plt.savefig(SAVE_PATH)
 
-    with open(f'data/topotest-lmask.pkl', 'wb') as f:
+    with open(f'data/topobert/lmask.pkl', 'wb') as f:
         pkl.dump(language_mask, f)

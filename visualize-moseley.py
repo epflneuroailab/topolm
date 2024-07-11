@@ -10,8 +10,8 @@ import scipy
 
 """ visualize topoformer activations """
 
-DUMP_PATH = 'data/topotest-moseley.pkl'
-SAVE_PATH = 'figures/moseley-'
+DUMP_PATH = 'data/topobert/responses-moseley.pkl'
+SAVE_PATH = 'figures/topobert/moseley-'
 
 def is_topk(a, k=1):
     _, rix = np.unique(-a, return_inverse=True)
@@ -26,11 +26,12 @@ if __name__ == "__main__":
     all_conditions = ['abstract_noun', 'abstract_verb', 'concrete_noun', 'concrete_verb']
     
     for condition in all_conditions:
+        activations = np.stack(data[condition], axis = 0).mean(axis = 0)
 
         fig, axes = plt.subplots(4, 4, figsize=(15, 15))
 
         for i, ax in enumerate(axes.flatten()):
-            sns.heatmap(data[condition][i].reshape(28, 28), ax = ax, cbar = False, center = 0)
+            sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, center = 0)
             ax.set_title(f'layer {i}')
             ax.axis('off')
 

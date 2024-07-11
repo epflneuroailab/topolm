@@ -5,8 +5,8 @@ import pickle as pkl
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-MASK_FILE = 'data/topotest-lmask.pkl'
-SAVEPATH = 'data/topotest-regions.pkl'
+MASK_FILE = 'data/topobert/lmask.pkl'
+SAVEPATH = 'data/topobert/regions.pkl'
 
 def kmeans(X, k):
     # randomly select k centers

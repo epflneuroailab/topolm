@@ -18,8 +18,8 @@ from torch.utils.data import Dataset, DataLoader
 
 log = logging.getLogger(__name__)
 
-MODEL_FILE = '~/projects/topo-eval/outputs/topotest/checkpoints/ScriptableMaskedLM_2024-07-03_9.9417/model.pth'
-SAVEPATH = '~/projects/topo-eval/data/topotest-extract.pkl'
+MODEL_FILE = '~/projects/topo-eval/outputs/topobert/checkpoints/ScriptableMaskedLM_2023-09-23_1.7895/model.pth'
+SAVEPATH = '~/projects/topo-eval/data/topobert/extract.pkl'
 FEDORENKO_DIR = '~/projects/topo-eval/fedorenko10_stimuli'
 
 attentions = defaultdict(lambda: {'sents': [], 'non_words': []})
@@ -78,7 +78,7 @@ def _register_hook(model, layer_name, input_type):
 
 @torch.no_grad()
 def main_process(cfg, setup):
-    layer_names = [f'encoder.layers.{i}.attn.dense' for i in range(16)]
+    layer_names = [f'encoder.layers.{i}.attn.self_attention.output_projection' for i in range(16)]
 
     hidden_dim = 784
     num_samples = 240
