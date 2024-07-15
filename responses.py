@@ -134,7 +134,8 @@ class Elli_Dataset(Dataset):
         return len(self.vocab) + 20_000
 
 def hook_fn(layer_name, module, inp, out):
-    activations[layer_name].append(out.squeeze(1).mean(dim = 0).detach().cpu())
+    activations[layer_name].append(out.mean(dim = 1).detach().cpu())
+    # activations[layer_name].append(out.squeeze(1).mean(dim = 0).detach().cpu())
 
 def _register_hook(model, layer_name):
     for name, layer in model.named_modules():
@@ -183,13 +184,11 @@ def main_process(cfg, setup):
         hook = _register_hook(model, layer_names[i])
 
         for batch_idx, batch_data in tqdm(enumerate(dataloader), total=len(dataloader)):
+
             sent, input_type = batch_data
             tokens = tokenizer(sent, truncation=True, max_length=12, return_attention_mask = False, return_tensors='pt')
 
             _, _ = model_engine.forward_inference(**tokens)
-            
-            if batch_idx > 40:
-                break
 
         hook.remove()
 
@@ -197,13 +196,9 @@ def main_process(cfg, setup):
 
         condition = all_conditions[i // dataset.num_samples]
 
-        tot_activations = np.array([activations[layer][i] for layer in activations])
-        print(tot_activations.shape)
+        tot_activations = np.array([activations[layer][i] for layer in activations]).squeeze(1)
 
         final_responses[condition].append(tot_activations) # * layer_mask)
-
-        if i > 40:
-            break
 
     for condition in final_responses:
         # (num_samples, num_layers, num_heads)
