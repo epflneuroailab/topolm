@@ -12,6 +12,8 @@ import numpy as np
 import pickle as pkl
 from dataclasses import dataclass
 
+from tqdm import tqdm
+
 from pathlib import Path
 from typing import Dict, Tuple, Union
 
@@ -31,8 +33,8 @@ class LayerPositions:
     coordinates: np.ndarray
 
     # neighborhood_indices is a M x N binary matrix, where there are M neighborhoods
-    neighborhood_indices: np.ndarray
-    neighborhood_radius: float
+    # neighborhood_indices: np.ndarray
+    # neighborhood_radius: float
 
     def save(self, save_dir: Path):
 
@@ -95,11 +97,11 @@ class NetworkPositions:
 
             pos.coordinates = torch.from_numpy(pos.coordinates.astype(np.float32))
             
-            pos.neighborhood_indices = torch.from_numpy(
-                pos.neighborhood_indices.astype(int)
-            )
+            # pos.neighborhood_indices = torch.from_numpy(
+            #     pos.neighborhood_indices.astype(int)
+            # )
 
-            pos.neighborhood_width = torch.tensor(pos.neighborhood_width)
+            # pos.neighborhood_width = torch.tensor(pos.neighborhood_width)
 
 ### SPATIAL LOSS ###
 
@@ -123,7 +125,7 @@ def spatial_loss(activations, positions, p = 'inf'):
     idx = np.triu_indices(num_units, k = 1)
 
     D = 1 / (1 + p_norm(positions, p))
-    r = np.corrcoef(activations.T)
+    r = np.corrcoef(activations)
 
     return 1 - np.corrcoef(r[idx], D[idx])[0][1]
 
@@ -134,17 +136,17 @@ def swap_units(positions, swap_ind):
     positions[swap_ind] = positions[np.flip(swap_ind)]
 
 # run swap optimization on a subset of units (e.g. a neighborhood)
-def swap_local(activations, positions, steps = 500):
+def swap_local(activations, positions, steps = 500, p = 'inf'):
     
     rng = np.random.default_rng(seed = 42)
     old_loss = np.inf
 
-    for _ in tqdm(range(steps)):
+    for _ in range(steps):
 
         swap_ind = rng.choice(positions.shape[0], size = 2, replace = False)
         swap_units(positions, swap_ind)
 
-        loss = spatial_loss(activations, positions)
+        loss = spatial_loss(activations, positions, p)
 
         if loss > old_loss:
             swap_units(positions, swap_ind)
@@ -154,12 +156,12 @@ def swap_local(activations, positions, steps = 500):
     return positions
 
 # binary mask of points within 'radius' of center
-def get_neighborhood(center, positions, radius = 0.3, p = 'inf'):
+def get_neighborhood(center, positions, radius = 5, p = 'inf'):
     distances = p_norm(positions, p)
     return distances[center] < radius
 
 # identify neighborhoods and run local optimization on each
-def swap_optimize(activations, positions, steps = 10_000, local_steps = 500, radius = 0.3, p = 'inf'):
+def swap_optimize(activations, positions, steps = 10_000, local_steps = 500, radius = 5, p = 'inf'):
 
     rng = np.random.default_rng(seed = 42)
 
@@ -170,6 +172,8 @@ def swap_optimize(activations, positions, steps = 10_000, local_steps = 500, rad
         neighborhood = get_neighborhood(center, positions, radius, p)
 
         positions[neighborhood] = swap_local(activations[neighborhood], positions[neighborhood], local_steps, p)
+
+    return positions
 
 
 
