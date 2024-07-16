@@ -129,6 +129,32 @@ def spatial_loss(activations, positions, p = 'inf'):
 
     return 1 - np.corrcoef(r[idx], D[idx])[0][1]
 
+def p_norm_torch(positions, p='inf'):
+
+    diff = positions[:, None, :] - positions[None, :, :]
+
+    if p == 1:
+        return torch.sum(torch.abs(diff), dim=-1)
+    if p == 2:
+        return torch.sqrt(torch.sum(diff ** 2, dim=-1))
+    if p == 'inf':
+        return torch.max(torch.abs(diff), dim=-1)[0]
+
+    raise ValueError(f'norm type {p} not supported')
+
+def spatial_loss_torch(activations, positions, p = 'inf'):
+
+    num_units = activations.shape[0]
+    idx = torch.triu_indices(num_units, num_units, offset=1)
+
+    D = 1 / (1 + p_norm_torch(positions, p))
+    r = torch.corrcoef(activations)
+
+    r_idx = r[idx[0], idx[1]]
+    D_idx = D[idx[0], idx[1]]
+
+    return 1 - torch.corrcoef(torch.stack((r_idx, D_idx)))[0, 1]
+
 ### PRE OPTIMIZATION ###
 
 # helper function
@@ -165,13 +191,13 @@ def swap_optimize(activations, positions, steps = 10_000, local_steps = 500, rad
 
     rng = np.random.default_rng(seed = 42)
 
-    for _ in tqdm(range(steps)):
+    for i in tqdm(range(steps)):
 
         # center is an index, neighborhood is a binary mask
         center = rng.choice(positions.shape[0])
         neighborhood = get_neighborhood(center, positions, radius, p)
 
-        positions[neighborhood] = swap_local(activations[neighborhood], positions[neighborhood], local_steps, p)
+        positions[neighborhood] = swap_local(activations[:, neighborhood], positions[neighborhood], local_steps, p)
 
     return positions
 
