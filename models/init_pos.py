@@ -1,3 +1,11 @@
+"""
+
+a script for initializing model NetworkPositions
+ - initialize and define neighborhoods
+ - preoptimization
+
+"""
+
 import torch
 import numpy as np
 from itertools import product
@@ -14,7 +22,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 rng = torch.Generator()
 rng.manual_seed(42)
 
-num_neighborhoods = 100
+num_neighborhoods = 50
 local_steps = 50
 neighborhoods_per_batch = 5
 
@@ -33,7 +41,7 @@ p = 'inf'
 ### BATCHIFY DATA ###
 def get_batch():
 
-    data = np.memmap('init/train.bin', dtype=np.uint16, mode='r')
+    data = np.memmap('init-data/train.bin', dtype=np.uint16, mode='r')
 
     ix = torch.randint(len(data) - block_size, (batch_size,))
 
@@ -64,7 +72,7 @@ for name in layer_names:
         center = get_center(pos.coordinates, radius)
         pos.neighborhood_indices[i] = get_neighborhood(center, pos.coordinates, radius, p)
 
-    pos.save('test')
+    pos.save('gpt2-positions')
 
 print('Initialized all layer positions and neighborhoods...')
 
@@ -94,7 +102,7 @@ with torch.no_grad():
 for name in layer_names:
     activations[name] = spatial_outputs[name][0]
 
-network_positions = NetworkPositions.load_from_dir('test')
+network_positions = NetworkPositions.load_from_dir('gpt2-positions')
 
 def print_layer(name):
     layer_line = f' LAYER {name} '
@@ -108,6 +116,8 @@ for name in layer_names:
     print_layer(name)
 
     layer_positions = network_positions.layer_positions[name].to_device(device)
+    activations[name] = activations[name].to(device)
+
     old_loss = spatial_loss_fn(activations[name], layer_positions)
 
     layer_positions, n_swapped = swap_optimize(activations[name], layer_positions, num_neighborhoods, local_steps, radius, p, rng)
@@ -115,4 +125,4 @@ for name in layer_names:
     new_loss = spatial_loss_fn(activations[name], layer_positions)
 
     print(f'global loss decreased by {(old_loss - new_loss):.3f} | swapped {n_swapped}/{local_steps * num_neighborhoods} possible pairs')
-    layer_positions.save('test')
+    layer_positions.save('gpt2-positions')
