@@ -46,6 +46,7 @@ wandb_log = False # disabled by default
 wandb_project = 'owt'
 wandb_run_name = 'gpt2' # 'run' + str(time.time())
 # data
+position_dir = 'gpt2-positions'
 dataset = 'openwebtext'
 gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
 batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
@@ -53,7 +54,7 @@ block_size = 1024
 # model
 n_layer = 12
 n_head = 12
-n_embed = 768
+n_embed = 784
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
@@ -296,7 +297,7 @@ while True:
                 "mfu": running_mfu*100, # convert to percentage
             })
         if losses['val'][0] < best_val_loss or always_save_checkpoint:
-            best_val_loss = losses['val']
+            best_val_loss = losses['val'][0]
             if iter_num > 0:
                 checkpoint = {
                     'model': raw_model.state_dict(),

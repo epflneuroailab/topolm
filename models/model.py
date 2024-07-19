@@ -121,7 +121,7 @@ class GPT(nn.Module):
         positions = NetworkPositions.load_from_dir(config.position_dir)
         self.positions = positions.layer_positions
 
-        self.alphas = [0.25 for _ in range(2 * config.n_layer)]
+        self.alphas = [0.5 for _ in range(2 * config.n_layer)]
 
         self.transformer = nn.ModuleDict(dict(
             wte = nn.Embedding(config.vocab_size, config.n_embed),
