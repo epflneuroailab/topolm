@@ -1,4 +1,4 @@
-# python train.py config/train_shakespeare_char.py --device=mps --compile=False --eval_iters=20 --log_interval=1 --block_size=64 --batch_size=12 --n_layer=4 --n_head=4 --n_embed=128 --max_iters=2000 --lr_decay_iters=2000 --dropout=0.0
+# python3 train.py train_gpt2.py --device=cpu --compile=False --eval_iters=2 --log_interval=1 --block_size=64 --batch_size=12 --n_head=1 --max_iters=1 --lr_decay_iters=1 --dropout=0.0
 
 """
 This training script can be run both on a single gpu in debug mode,
@@ -79,6 +79,8 @@ config_keys = [k for k,v in globals().items() if not k.startswith('_') and isins
 exec(open('configurator.py').read()) # overrides from command line or config file
 config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # -----------------------------------------------------------------------------
+
+terminal_size = os.get_terminal_size()
 
 # various inits, derived attributes, I/O setup
 ddp = int(os.environ.get('RANK', -1)) != -1 # is this a ddp run?
@@ -220,12 +222,16 @@ def estimate_loss():
     model.eval()
     for split in ['train', 'val']:
         losses = torch.zeros(eval_iters)
+        task_losses = torch.zeros(eval_iters)
+        spatial_losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
             X, Y = get_batch(split)
             with ctx:
-                logits, loss, spatial_outputs = model(X, Y)
+                logits, loss, task_loss, spatial_loss, spatial_outputs = model(X, Y)
             losses[k] = loss.item()
-        out[split] = losses.mean()
+            task_losses[k] = task_loss.item()
+            spatial_losses[k] = spatial_loss.item()
+        out[split] = [losses.mean(), task_losses.mean(), spatial_losses.mean()]
     model.train()
     return out
 
@@ -242,6 +248,22 @@ def get_lr(it):
     assert 0 <= decay_ratio <= 1
     coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio)) # coeff ranges 0..1
     return min_lr + coeff * (learning_rate - min_lr)
+
+# pretty print iteration
+def iterlog(iter_num, lossf, task_loss, spatial_loss, dt, running_mfu):
+    task_loss = task_loss.item()
+    spatial_loss = spatial_loss.item()
+    return ' | '.join([f'Iter {iter_num}', f'Loss: {lossf:.4f}', f'Task Loss: {task_loss:.4f}', f'Spatial Loss: {spatial_loss:.4f}', f'Time: {dt*1000:.2f}ms', f'MFU: {running_mfu*100:.2f}%'])
+
+def evallog(iter_num, losses):
+    iter_line = f' ITER {iter_num} '
+    padding = (terminal_size.columns - len(iter_line)) // 2
+    iter_line = f'{"=" * padding}{iter_line}{"=" * padding}'
+
+    train_line = 'TRAIN | ' + ' | '.join([f'{comp} Loss: {loss:.4f}' for comp, loss in zip(['Total', 'Task', 'Spatial'], losses['train'])])
+    val_line = 'VALID | ' + ' | '.join([f'{comp} Loss: {loss:.4f}' for comp, loss in zip(['Total', 'Task', 'Spatial'], losses['val'])])
+
+    return '\n'.join([iter_line, train_line, val_line])
 
 # logging
 if wandb_log and master_process:
@@ -264,16 +286,16 @@ while True:
     # evaluate the loss on train/val sets and write checkpoints
     if iter_num % eval_interval == 0 and master_process:
         losses = estimate_loss()
-        print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+        print(evallog(iter_num, losses))
         if wandb_log:
             wandb.log({
                 "iter": iter_num,
-                "train/loss": losses['train'],
-                "val/loss": losses['val'],
+                "train/loss": losses['train'][0],
+                "val/loss": losses['val'][0],
                 "lr": lr,
                 "mfu": running_mfu*100, # convert to percentage
             })
-        if losses['val'] < best_val_loss or always_save_checkpoint:
+        if losses['val'][0] < best_val_loss or always_save_checkpoint:
             best_val_loss = losses['val']
             if iter_num > 0:
                 checkpoint = {
@@ -299,7 +321,7 @@ while True:
             # looking at the source of that context manager, it just toggles this variable
             model.require_backward_grad_sync = (micro_step == gradient_accumulation_steps - 1)
         with ctx:
-            logits, loss = model(X, Y)
+            logits, loss, task_loss, spatial_loss, spatial_outputs = model(X, Y)
             loss = loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
         # immediately async prefetch next batch while model is doing the forward pass on the GPU
         X, Y = get_batch('train')
@@ -326,7 +348,7 @@ while True:
         if local_iter_num >= 5: # let the training loop settle a bit
             mfu = raw_model.estimate_mfu(batch_size * gradient_accumulation_steps, dt)
             running_mfu = mfu if running_mfu == -1.0 else 0.9*running_mfu + 0.1*mfu
-        print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
+        print(iterlog(iter_num, lossf, task_loss, spatial_loss, dt, running_mfu))
     iter_num += 1
     local_iter_num += 1
 

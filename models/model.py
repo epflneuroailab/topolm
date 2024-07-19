@@ -17,7 +17,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-from positions import LayerPositions, NetworkPositions, spatial_loss_torch
+from positions import LayerPositions, NetworkPositions, spatial_loss_fn
 
 class LayerNorm(nn.Module):
     """ LayerNorm but with an optional bias. PyTorch doesn't support simply bias=False """
@@ -119,7 +119,6 @@ class GPT(nn.Module):
 
         # pre-optimized unit positions
         positions = NetworkPositions.load_from_dir(config.position_dir)
-        positions.to_torch()
         self.positions = positions.layer_positions
 
         self.alphas = [0.25 for _ in range(2 * config.n_layer)]
@@ -185,8 +184,8 @@ class GPT(nn.Module):
             attn_out, mlp_out = block(x)
             out_shape = attn_out.shape
 
-            spatial_outputs[f'layer.{i}.attn'] = (attn_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.attn'].coordinates)
-            spatial_outputs[f'layer.{i}.mlp'] = (mlp_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.mlp'].coordinates)
+            spatial_outputs[f'layer.{i}.attn'] = (attn_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.attn'].to_device(device))
+            spatial_outputs[f'layer.{i}.mlp'] = (mlp_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.mlp'].to_device(device))
 
             x = mlp_out
 
@@ -199,15 +198,17 @@ class GPT(nn.Module):
 
             spatial_loss = 0
             for i, name in enumerate(spatial_outputs):
-                spatial_loss += self.alphas[i] * spatial_loss_torch(*spatial_outputs[name])
+                spatial_loss += self.alphas[i] * spatial_loss_fn(*spatial_outputs[name])
 
             loss = task_loss + spatial_loss
         else:
             # inference-time mini-optimization: only forward the lm_head on the very last position
             logits = self.lm_head(x[:, [-1], :]) # note: using list [-1] to preserve the time dim
+            task_loss = None
+            spatial_loss = None
             loss = None
 
-        return logits, loss, spatial_outputs
+        return logits, loss, task_loss, spatial_loss, spatial_outputs
 
     def crop_block_size(self, block_size):
         # model surgery to decrease the block size if necessary
