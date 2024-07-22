@@ -6,6 +6,9 @@ a script for initializing model NetworkPositions
 
 """
 
+import sys
+from omegaconf import OmegaConf
+
 import torch
 import numpy as np
 from itertools import product
@@ -22,21 +25,21 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 rng = torch.Generator()
 rng.manual_seed(42)
 
-num_neighborhoods = 50
-local_steps = 50
-neighborhoods_per_batch = 5
+# evil config magic
+cfg_file = 'config/init_pos.yaml'
+for i, arg in enumerate(sys.argv):
+    if arg[:3] == 'cfg':
+        cfg_file = arg.split('=')[1]
+        sys.argv.pop(i)
 
-batch_size = 12
-n_layer = 12
-n_head = 1
-n_embed = 784
-block_size = 4
-bias = False
-vocab_size = 50304
-dropout = 0.0
+cfg = OmegaConf.load(cfg_file)
+cfg.update(OmegaConf.from_cli())
 
-radius = 10
-p = 'inf'
+for key in cfg:
+    try:
+        exec(key + '=' + str(cfg[key]))
+    except NameError:
+        exec(key + '="' + cfg[key] + '"')
 
 ### BATCHIFY DATA ###
 def get_batch():
@@ -115,7 +118,7 @@ for name in layer_names:
 
     print_layer(name)
 
-    layer_positions = network_positions.layer_positions[name].to_device(device)
+    layer_positions = network_positions.layer_positions[name].to(device)
     activations[name] = activations[name].to(device)
 
     old_loss = spatial_loss_fn(activations[name], layer_positions)
@@ -125,4 +128,6 @@ for name in layer_names:
     new_loss = spatial_loss_fn(activations[name], layer_positions)
 
     print(f'global loss decreased by {(old_loss - new_loss):.3f} | swapped {n_swapped}/{local_steps * num_neighborhoods} possible pairs')
+    
+    layer_positions = layer_positions.to('cpu')
     layer_positions.save('gpt2-positions')

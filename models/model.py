@@ -107,7 +107,7 @@ class GPTConfig:
     n_embed: int = 784
     dropout: float = 0.0
     bias: bool = True # True: bias in Linears and LayerNorms, like GPT-2. False: a bit better and faster
-    position_dir: str = 'test'
+    position_dir: str = 'gpt2-positions'
 
 class GPT(nn.Module):
 
@@ -184,8 +184,8 @@ class GPT(nn.Module):
             attn_out, mlp_out = block(x)
             out_shape = attn_out.shape
 
-            spatial_outputs[f'layer.{i}.attn'] = (attn_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.attn'].to_device(device))
-            spatial_outputs[f'layer.{i}.mlp'] = (mlp_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.mlp'].to_device(device))
+            spatial_outputs[f'layer.{i}.attn'] = (attn_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.attn'].to(device))
+            spatial_outputs[f'layer.{i}.mlp'] = (mlp_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.mlp'].to(device))
 
             x = mlp_out
 

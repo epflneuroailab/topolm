@@ -1,0 +1,15 @@
+num_neighborhoods: 50
+local_steps: 50
+neighborhoods_per_batch: 5
+
+batch_size: 12
+n_layer: 12
+n_head: 1
+n_embed: 784
+block_size: 4
+bias: False
+vocab_size: 50304
+dropout: 0.0
+
+radius: 10
+p: 'inf'

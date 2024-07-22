@@ -60,7 +60,7 @@ class LayerPositions:
             return pkl.load(f)
 
     # helper to put things on gpu
-    def to_device(self, device):
+    def to(self, device):
         self.coordinates = self.coordinates.to(device)
         self.neighborhood_indices = self.neighborhood_indices.to(device)
 
