@@ -5,8 +5,8 @@ training and evaluating topographic language models
 you can install all python dependencies with `pip3 install -r requirements.txt`
 * torch 2.x (for flash attn + compilation)
 * huggingface datasets (for owt), tiktoken (for bpe)
-* omegaconf, tqdm, wandb
+* omegaconf, wandb, tqdm
 * matplotlib, seaborn
-* pandas / numpy
+* pandas, numpy, scipy
 
-final analyses are done in R / tidyr
+final analyses are done in R + tidyr
