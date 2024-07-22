@@ -30,7 +30,7 @@ gradient_accumulation_steps: 5 * 8
 
 # model
 n_layer: 12
-n_head: 12
+n_head: 16
 n_embed: 784
 dropout: 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias: False # do we use bias inside LayerNorm and Linear layers?

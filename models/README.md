@@ -1,8 +1,15 @@
 # models
+code for training a topographic model
 
-we (almost) use the standard GPT-2 architecture, augmented with spatially embedded units (for gpt-2, in 28x28 space; `positions.py`). unit positions are first pre-optimized (`init_pos.py`) against a set of ??? (`init-data`), and then frozen. models are then trained (`train.py`) to minimize a weighted combination of task and spatial loss.
+* `config` contains model training and pre-optimization configs
+* `init-data` contains data for pre-optimization
+* `data` contains model training data (or infra for downloading)
+* trained models are stored in `out`
 
-code is built on top of [nanoGPT](https://github.com/karpathy/nanoGPT) and [TDANN](https://github.com/neuroailab/TDANN) (margalit et al., 2023).
+## details
+we use an almost-standard GPT-2 architecture (`model.py`), augmented with spatially embedded units (`positions.py`). unit positions are first pre-optimized against a set of ??? (`init_pos.py`), and then frozen. models are then trained to minimize a weighted combination of task and spatial loss (`train.py`).
+
+code is built on top of [nanoGPT](https://github.com/karpathy/nanoGPT) and [TDANN / spacetorch](https://github.com/neuroailab/TDANN) (margalit et al., 2023).
 
 ## pre optimization
-at each layer, we randomly select 50 square 'cortical neighborhoods' with some radius. for each neighborhood, we iteratively perform 50 swapping perturbations, maintaining those that do not increase spatial loss. a radius of ~10 seems to have good pre-optimization performance (note that with a layer of size 28x28, there are only 64 20x20 neighborhoods).
+we randomly select 10,000 circular 'cortical neighborhoods' with some radius. for each neighborhood, we iteratively perform 500 swapping perturbations, maintaining those that do not increase spatial loss.

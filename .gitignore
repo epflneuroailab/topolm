@@ -1,10 +1,4 @@
 
 .DS_Store
-/outputs
-/fedorenko_response_stimuli
-/fedorenko10_stimuli
 .Rhistory
-/data
-nanoGPT/
-/models/test
-/figures/topobert/elli
+/models/out
