@@ -20,5 +20,7 @@ we randomly select 50 square 'cortical neighborhoods' with radius 10. for each n
 
 ## training
 we minimize both task loss (cross-entropy on next-word prediction) and layer-wise spatial loss, defined as
+
 $$\frac{1}{2} \cdot \left(1 - \mathrm{corr}(r, D)\right) \in [0, 1]$$
+
 where $D$ is the inverse distance $D_i = 1 / (d_i + 1)$ and $r$ is the pairwise correlations of activations over a batch. computing these correlations is unwieldy for large `n_embed`, so on each forward pass, we randomly sample just 5 radius 10 neighborhoods to estimate the loss.
