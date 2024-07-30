@@ -2,3 +2,5 @@
 .DS_Store
 .Rhistory
 /models/out
+/eval/hauptmann
+/models/wandb

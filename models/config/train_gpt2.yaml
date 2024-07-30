@@ -16,7 +16,7 @@ eval_only: False # if True, script exits right after the first eval
 # wandb logging
 wandb_log: True # disabled by default
 wandb_project: 'shakespeare-spatial'
-wandb_run_name: 'gpt2-run-' + str(time.time())
+wandb_run_name: "'gpt2-run-' + str(time.time())"
 
 # data
 position_dir: 'gpt2-positions'
@@ -54,5 +54,5 @@ backend: 'nccl' # 'nccl', 'gloo', etc.
 
 # system
 device: 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
-dtype: 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
+dtype: "'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16'" # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
 compile: True # use PyTorch 2.0 to compile the model to be faster

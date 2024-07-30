@@ -1,4 +1,4 @@
-# python3 train.py train_gpt2.py --device=cpu --compile=False --eval_interval 5 --eval_iters=2 --log_interval=1 --block_size=64 --batch_size=12 --n_head=1 --max_iters=10 --lr_decay_iters=1 --dropout=0.0
+# python3 train.py train_gpt2.yaml device=cpu eval_interval=5 eval_iters=2 log_interval=1 block_size=64 batch_size=12 n_head=1 max_iters=10 lr_decay_iters=1
 
 """
 This training script can be run both on a single gpu in debug mode,
@@ -9,6 +9,7 @@ $ python train.py --batch_size=32 --compile=False
 
 To run with DDP on 4 gpus on 1 node, example:
 $ torchrun --standalone --nproc_per_node=4 train.py
+# torchrun --standalone --nproc_per_node=4 train.py train_gpt2.yaml eval_interval=5 eval_iters=2 log_interval=1 block_size=64 batch_size=12 n_head=1 max_iters=10 lr_decay_iters=1
 
 To run with DDP on 4 gpus across 2 nodes, example:
 - Run on the first (master) node with example IP 123.456.123.456:
@@ -19,6 +20,7 @@ $ torchrun --nproc_per_node=8 --nnodes=2 --node_rank=1 --master_addr=123.456.123
 """
 
 import os
+import sys
 import time
 import math
 import pickle
@@ -275,6 +277,7 @@ while True:
                     'config': cfg,
                 }
                 print(f"saving checkpoint to {out_dir}")
+                os.rename(os.path.join(out_dir, 'ckpt.pt'), os.path.join(out_dir, f'ckpt-{iter_num - 1}.pt'))
                 torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
     if iter_num == 0 and eval_only:
         break
