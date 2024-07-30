@@ -277,7 +277,10 @@ while True:
                     'config': cfg,
                 }
                 print(f"saving checkpoint to {out_dir}")
-                os.rename(os.path.join(out_dir, 'ckpt.pt'), os.path.join(out_dir, f'ckpt-{iter_num - 1}.pt'))
+                
+                if iter_num > 1:
+                    os.rename(os.path.join(out_dir, 'ckpt.pt'), os.path.join(out_dir, f'ckpt-{iter_num - 1}.pt'))
+
                 torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
     if iter_num == 0 and eval_only:
         break
