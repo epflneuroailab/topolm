@@ -3,7 +3,7 @@
 # $ torchrun --standalone --nproc_per_node=8 train.py config/train_gpt2.py
 
 # I/O
-out_dir: 'out'
+out_dir: "'out/run-' + str(time.time())"
 always_save_checkpoint: True # if True, always save a checkpoint after each eval
 init_from: 'scratch' # 'scratch' or 'resume' or 'gpt2*'
 
