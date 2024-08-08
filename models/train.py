@@ -46,21 +46,23 @@ for i, arg in enumerate(sys.argv):
 cfg = OmegaConf.load(cfg_file)
 cfg.update(OmegaConf.from_cli())
 
+# important_cfg_keys = [
+#     'dataset', 'batch_size', 'block_size', 'gradient_accumulation_steps', 
+#     'n_layer', 'n_head', 'n_embed', 'dropout', 'bias', 'learning_rate', 
+#     'max_iters', 'weight_decay', 'beta1', 'beta2', 'grad_clip', 'decay_lr', 
+#     'warmup_iters', 'lr_decay_iters', 'min_lr'
+# ]
+
 for key in cfg:
     try:
         exec(key + '=' + str(cfg[key]))
     except NameError:
         exec(key + '="' + cfg[key] + '"')
 
-os.makedirs(out_dir, exist_ok=True)
+    # if key not in important_cfg_keys:
+    #     del cfg[key]
 
-# logging
-logging.basicConfig(filename=os.path.join(out_dir, 'logs.txt'),
-    level=logging.DEBUG,
-    format='%(asctime)s %(message)s',
-    filemode='w')
-
-logger = logging.getLogger(__name__)
+cfg = OmegaConf.to_container(cfg)
 
 # various inits, derived attributes, I/O setup
 ddp = int(os.environ.get('RANK', -1)) != -1 # is this a ddp run?
@@ -82,6 +84,18 @@ else:
     master_process = True
     seed_offset = 0
     ddp_world_size = 1
+
+if master_process:
+    os.makedirs(out_dir, exist_ok=True)
+
+# logging
+logging.basicConfig(filename=os.path.join(out_dir, 'logs.txt'),
+    level=logging.DEBUG,
+    format='%(asctime)s %(message)s',
+    filemode='w')
+
+logger = logging.getLogger(__name__)
+
 tokens_per_iter = gradient_accumulation_steps * ddp_world_size * batch_size * block_size
 logging.info(f"tokens per iteration will be: {tokens_per_iter:,}")
 
@@ -255,17 +269,20 @@ while True:
     if iter_num % eval_interval == 0 and master_process:
         losses = estimate_loss()
 
-        logging.info('-' * 25)
+        logging.info('-' * 50)
         logging.info(f'EVALUATING AND SAVING: ITERATION {iter_num}')
         logging.info('Train | ' + ' | '.join([f'{comp} Loss: {loss:.4f}' for comp, loss in zip(['Total', 'Task', 'Spatial'], losses['train'])]))
-        logging.info('VALID | ' + ' | '.join([f'{comp} Loss: {loss:.4f}' for comp, loss in zip(['Total', 'Task', 'Spatial'], losses['val'])]))
-        logging.info('-' * 25)
+        logging.info('Valid | ' + ' | '.join([f'{comp} Loss: {loss:.4f}' for comp, loss in zip(['Total', 'Task', 'Spatial'], losses['val'])]))
 
         if wandb_log:
             wandb.log({
                 "iter": iter_num,
-                "train/loss": losses['train'][0],
-                "val/loss": losses['val'][0],
+                "train/loss-total": losses['train'][0],
+                "train/loss-task": losses['train'][1],
+                "train/loss-spatial": losses['train'][2],
+                "val/loss-total": losses['val'][0],
+                "val/loss-task": losses['val'][1],
+                "val/loss-spatial": losses['val'][2],
                 "lr": lr,
                 "mfu": running_mfu*100, # convert to percentage
             })
@@ -286,6 +303,9 @@ while True:
                 #     os.rename(os.path.join(out_dir, 'ckpt.pt'), os.path.join(out_dir, f'ckpt-{(iter_num // eval_interval) - 1}.pt'))
 
                 torch.save(checkpoint, os.path.join(out_dir, f'ckpt-{(iter_num // eval_interval) - 1}.pt'))
+
+        logging.info('-' * 50)
+
     if iter_num == 0 and eval_only:
         break
 
