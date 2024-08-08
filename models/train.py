@@ -85,8 +85,7 @@ else:
     seed_offset = 0
     ddp_world_size = 1
 
-if master_process:
-    os.makedirs(out_dir, exist_ok=True)
+os.makedirs(out_dir, exist_ok=True)
 
 # logging
 logging.basicConfig(filename=os.path.join(out_dir, 'logs.txt'),
