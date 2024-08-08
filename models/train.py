@@ -152,8 +152,18 @@ if init_from == 'scratch':
     model = GPT(gptconf)
 elif init_from == 'resume':
     logging.info(f"Resuming training from {out_dir}")
-    # resume training from a checkpoint.
-    ckpt_path = os.path.join(out_dir, 'ckpt.pt')
+
+    # resume training from a checkpoint
+    ckpt_file = max(
+        [f for f in os.listdir(out_dir) if f.startswith('ckpt-')],
+        key=lambda x: int(x.split('-')[1].split('.')[0]),
+        default=None
+    )
+
+    logging.info(f'resuming from file: {ckpt_file}')
+    print(f'resuming from file: {ckpt_file}')
+
+    ckpt_path = os.path.join(out_dir, ckpt_file)
     checkpoint = torch.load(ckpt_path, map_location=device)
     checkpoint_model_args = checkpoint['model_args']
     # force these config attributes to be equal otherwise we can't even resume training
@@ -249,7 +259,10 @@ def iterlog(iter_num, lossf, task_loss, spatial_loss, dt, running_mfu):
 # logging
 if wandb_log and master_process:
     import wandb
-    wandb.init(project=wandb_project, name=wandb_run_name, config=cfg)
+    if init_from == 'resume':
+        wandb.init(project=wandb_project, name=wandb_run_name, id=wandb_run_id, config=cfg, resume = "must")
+    else:
+        wandb.init(project=wandb_project, name=wandb_run_name, config=cfg)
 
 # training loop
 X, Y = get_batch('train') # fetch the very first batch
