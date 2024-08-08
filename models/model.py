@@ -108,6 +108,7 @@ class GPTConfig:
     dropout: float = 0.0
     bias: bool = True # True: bias in Linears and LayerNorms, like GPT-2. False: a bit better and faster
     position_dir: str = 'gpt2-positions'
+    alpha: float = 0.25
 
 class GPT(nn.Module):
 
@@ -121,7 +122,7 @@ class GPT(nn.Module):
         positions = NetworkPositions.load_from_dir(config.position_dir)
         self.positions = positions.layer_positions
 
-        self.alphas = [1.0 for _ in range(2 * config.n_layer)]
+        self.alphas = [config.alpha for _ in range(2 * config.n_layer)]
 
         self.transformer = nn.ModuleDict(dict(
             wte = nn.Embedding(config.vocab_size, config.n_embed),

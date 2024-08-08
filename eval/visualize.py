@@ -1,3 +1,6 @@
+import os
+import sys
+
 import pickle as pkl
 from omegaconf import OmegaConf
 
@@ -6,6 +9,9 @@ import matplotlib.pyplot as plt
 
 import scipy
 import numpy as np
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
+import positions
 
 """ visualize topoformer activations and selectivity for a specific stimulus set """
 
@@ -17,12 +23,12 @@ if __name__ == "__main__":
 
     print('Loading data...')
 
-    with open(DATA_PATH + cfg.stimulus, 'rb') as f:
+    with open(DATA_PATH + cfg.stimulus + '.pkl', 'rb') as f:
         data = pkl.load(f)
 
     num_units = 784
     layer_names = []
-    for i in range(16):
+    for i in range(12):
         layer_names += [f'layer.{i}.attn', f'layer.{i}.mlp']
 
     if cfg.stimulus == 'fedorenko':
@@ -93,10 +99,20 @@ if __name__ == "__main__":
         # (n_layers, n_embed)
         activations = data[condition].mean(axis = 0)
 
-        fig, axes = plt.subplots(8, 4, figsize=(15, 15))
+        fig, axes = plt.subplots(6, 4, figsize=(15, 15))
 
         for i, ax in enumerate(axes.flatten()):
-            sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'viridis', center = 0)
+
+            with open(f'../models/gpt2-positions/{layer_names[i]}.pkl', 'rb') as f:
+                pos = pkl.load(f)
+
+            coordinates = pos.coordinates.to(int)
+
+            grid = np.full((28, 28), np.nan)
+            grid[coordinates[:, 0], coordinates[:, 1]] = activations[i]
+            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu', center=0)
+
+            # sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'RdBu', center = 0)
             ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
 
@@ -105,7 +121,7 @@ if __name__ == "__main__":
         cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
         norm = plt.Normalize(vmin=np.min(activations), vmax=np.max(activations))
 
-        sm = plt.cm.ScalarMappable(cmap = 'viridis', norm=norm)
+        sm = plt.cm.ScalarMappable(cmap = 'RdBu', norm=norm)
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
 
@@ -121,17 +137,26 @@ if __name__ == "__main__":
         for layer_idx, layer_name in enumerate(layer_names):
         
             # (num_samples, n_embed)
-            activations = (contrasts[condition][0][layer_name], contrasts[condition][1][layer_name])
+            activations = (contrasts[condition][0][layer_idx], contrasts[condition][1][layer_idx])
             t_values_matrix[layer_idx], p_values_matrix[layer_idx] = scipy.stats.ttest_ind(activations[0], activations[1], axis=0, equal_var=False)
 
         adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
-        adjusted_p_values = adjusted_p_values.reshape((len(layer_names), n_embed))
+        adjusted_p_values = adjusted_p_values.reshape((len(layer_names), activations[0].shape[1]))
         selectivity = (adjusted_p_values < 0.05) * t_values_matrix
 
-        fig, axes = plt.subplots(8, 4, figsize=(15, 15))
+        fig, axes = plt.subplots(6, 4, figsize=(15, 15))
 
         for i, ax in enumerate(axes.flatten()):
-            sns.heatmap(selectivity[i].reshape(28, 28), ax = ax, cbar=False, center = 0)
+
+            with open(f'../models/gpt2-positions/{layer_names[i]}.pkl', 'rb') as f:
+                pos = pkl.load(f)
+
+            coordinates = pos.coordinates.to(int)
+
+            grid = np.full((28, 28), np.nan)
+            grid[coordinates[:, 0], coordinates[:, 1]] = selectivity[i]
+
+            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu', center=0)
             ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
 
@@ -140,7 +165,7 @@ if __name__ == "__main__":
         cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
         norm = plt.Normalize(vmin=np.min(selectivity), vmax=np.max(selectivity))
 
-        sm = plt.cm.ScalarMappable(cmap = 'viridis', norm=norm)
+        sm = plt.cm.ScalarMappable(cmap = 'RdBu', norm=norm)
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
         

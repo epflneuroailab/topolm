@@ -3,10 +3,10 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 
-setwd('~/projects/topo-eval/')
+setwd('~/projects/topo-eval/eval/')
 
 ### AVERAGE ACROSS LAYERS
-df <- read.csv('data/topobert/fedorenko-by-layer-unmasked.csv')
+df <- read.csv('data/responses/fedorenko-profiles.csv')
 
 summarized <- df %>%
   group_by(condition) %>%

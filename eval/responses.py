@@ -1,9 +1,14 @@
 import os
+import sys
+
 from glob import glob
 import pickle as pkl
 
 import pandas as pd
 import numpy as np
+
+import tiktoken
+import itertools
 
 from tqdm import tqdm
 from omegaconf import OmegaConf
@@ -12,7 +17,10 @@ from collections import defaultdict
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-MODEL_FILE = '../out/ckpt.pt'
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
+from model import GPT, GPTConfig
+
+MODEL_FILE = '../models/out/ckpt.pt'
 SAVE_PATH = 'data/responses/'
 
 FEDORENKO = 'stimuli/fedorenko_stimuli.csv'
@@ -35,6 +43,7 @@ class Fedorenko_Dataset(Dataset):
 
         self.all_conditions = sorted(set([i[1] for i in self.items]))
         self.num_samples = len(self.items) // len(self.all_conditions)
+        self.batch_size = 32
 
         # self.sentences = data[data["stim14"]=="S"]["sent"]
         # self.non_words = data[data["stim14"]=="N"]["sent"]
@@ -72,6 +81,7 @@ class Moseley_Dataset(Dataset):
 
         self.all_conditions = sorted(set([i[1] for i in self.items]))
         self.num_samples = len(self.items) // len(self.all_conditions)
+        self.batch_size = 10
 
     def tokenize(self, sent):
         return torch.tensor([self.w2idx[w]+20_000 for w in sent.split()])
@@ -106,6 +116,7 @@ class Elli_Dataset(Dataset):
         
         self.all_conditions = sorted(set([i[1] for i in self.items]))
         self.num_samples = len(self.items) // len(self.all_conditions)
+        self.batch_size = 10
 
     def tokenize(self, sent):
         return torch.tensor([self.w2idx[w]+20_000 for w in sent.split()])
@@ -123,10 +134,13 @@ class Elli_Dataset(Dataset):
         return len(self.vocab) + 20_000
 
 if __name__ == "__main__":
+    device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
+
     cfg = OmegaConf.from_cli()
 
     checkpoint = torch.load(MODEL_FILE, map_location=device)
     model_args = checkpoint['model_args']
+    model_args['position_dir'] = '../models/gpt2-positions/'
 
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
@@ -143,10 +157,11 @@ if __name__ == "__main__":
     model.eval()
 
     layer_names = []
-    for i in range(16):
+    for i in range(12):
         layer_names += [f'layer.{i}.attn', f'layer.{i}.mlp']
 
     tokenizer = tiktoken.get_encoding('gpt2')
+    pad_token = tokenizer.encode('<|endoftext|>', allowed_special="all")[0]
 
     if cfg.stimulus == 'moseley':
         dataset = Moseley_Dataset(tokenizer)
@@ -157,17 +172,29 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'provided stimulus ({cfg.stimulus}) currently not supported!')
 
-    dataloader = DataLoader(dataset, batch_size=1)
+    dataloader = DataLoader(dataset, batch_size=dataset.batch_size)
 
     activations = defaultdict(list)
     for batch_idx, batch_data in tqdm(enumerate(dataloader), total=len(dataloader)):
-        sent, input_type = batch_data
-        tokens = tokenizer.encode_ordinary(sent)
-        _, _, _, _, spatial_outputs = model(**tokens)
+        sents, input_type = batch_data
+
+        tokens = tokenizer.encode_batch(sents, allowed_special = 'all')
+        padded = list(zip(*itertools.zip_longest(*tokens, fillvalue=pad_token)))
+
+        X = np.array(padded)
+        Y = np.zeros_like(X)
+        Y[:, :-1] = X[:, 1:]
+        Y[:, -1] = pad_token
+
+        _, _, _, _, spatial_outputs = model(torch.from_numpy(X), torch.from_numpy(Y))
+        batch_size, batch_len = X.shape
 
         for layer in layer_names:
-            # spatial_outputs[layer][0] has shape (1, n_embed) so we squeeze to (n_embed,)
-            activations[layer].append(spatial_outputs[layer][0].squeeze(0).detach().cpu())
+
+            reshaped = spatial_outputs[layer][0].view(batch_size, batch_len, -1).mean(axis=1).detach().cpu()
+
+            for i in range(batch_size):
+                activations[layer].append(reshaped[i])
 
     final_responses = defaultdict(list)
     for i in range(len(activations[layer_names[0]])):
@@ -182,6 +209,6 @@ if __name__ == "__main__":
         # (num_samples, num_layers, n_embed)
         final_responses[condition] = np.stack(final_responses[condition], axis = 0)
 
-    with open(os.path.expanduser(SAVEPATH + stimuli + '.pkl'), 'wb') as f:
+    with open(os.path.expanduser(SAVE_PATH + cfg.stimulus + '.pkl'), 'wb') as f:
         pkl.dump(final_responses, f)
 

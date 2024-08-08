@@ -1,17 +1,24 @@
 import os
+import sys
+
 from glob import glob
 import pickle as pkl
 
 import pandas as pd
 import numpy as np
 
+import tiktoken
+import itertools
 from tqdm import tqdm
 from collections import defaultdict
 
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-MODEL_FILE = '../out/ckpt.pt'
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
+from model import GPT, GPTConfig
+
+MODEL_FILE = '../models/out/ckpt.pt'
 SAVE_PATH = 'data/extract.pkl'
 STIMULI_DIR = 'stimuli/fedorenko10_stimuli'
 
@@ -60,9 +67,11 @@ class Fed10_LocLangDataset(Dataset):
         return len(self.vocab) + 20_000
 
 if __name__ == "__main__":
+    device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 
     checkpoint = torch.load(MODEL_FILE, map_location=device)
     model_args = checkpoint['model_args']
+    model_args['position_dir'] = '../models/gpt2-positions/'
 
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
@@ -79,7 +88,7 @@ if __name__ == "__main__":
     model.eval()
 
     layer_names = []
-    for i in range(16):
+    for i in range(12):
         layer_names += [f'layer.{i}.attn', f'layer.{i}.mlp']
 
     n_embed = 784
@@ -91,18 +100,32 @@ if __name__ == "__main__":
     }
 
     tokenizer = tiktoken.get_encoding('gpt2')
+    pad_token = tokenizer.encode('<|endoftext|>', allowed_special="all")[0]
+
     dataset = Fed10_LocLangDataset(tokenizer)
-    dataloader = DataLoader(dataset, batch_size=1)
+    dataloader = DataLoader(dataset, batch_size=12)
 
     activations = defaultdict(list)
     for batch_idx, batch_data in tqdm(enumerate(dataloader), total=len(dataloader)):
-        sent, input_type = batch_data
-        tokens = tokenizer.encode_ordinary(sent)
-        _, _, _, _, spatial_outputs = model(**tokens)
+        sents, input_type = batch_data
+
+        tokens = tokenizer.encode_batch(sents, allowed_special = 'all')
+        padded = list(zip(*itertools.zip_longest(*tokens, fillvalue=pad_token)))
+
+        X = np.array(padded)
+        Y = np.zeros_like(X)
+        Y[:, :-1] = X[:, 1:]
+        Y[:, -1] = pad_token
+
+        _, _, _, _, spatial_outputs = model(torch.from_numpy(X), torch.from_numpy(Y))
+        batch_size, batch_len = X.shape
 
         for layer in layer_names:
-            # spatial_outputs[layer][0] has shape (1, n_embed) so we squeeze
-            activations[layer].append(spatial_outputs[layer][0].squeeze(0).detach().cpu())
+
+            reshaped = spatial_outputs[layer][0].view(batch_size, batch_len, -1).mean(axis=1).detach().cpu()
+
+            for i in range(batch_size):
+                activations[layer].append(reshaped[i])
 
     for layer in layer_names:
 

@@ -1,13 +1,19 @@
+import os
+import sys
 import pickle as pkl
 
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 import scipy
 import numpy as np
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
+import positions
+
 DUMP_PATH = 'data/extract.pkl'
-SAVE_PATH = 'figures/lmask.png'
+SAVE_PATH = '../figures/lmask.png'
 
 def is_topk(a, k=1):
     _, rix = np.unique(-a, return_inverse=True)
@@ -19,7 +25,7 @@ if __name__ == "__main__":
         data = pkl.load(f)
 
     layer_names = []
-    for i in range(16):
+    for i in range(12):
         layer_names += [f'layer.{i}.attn', f'layer.{i}.mlp']
 
     n_embed = data['sentences'][layer_names[0]].shape[-1]
@@ -51,14 +57,31 @@ if __name__ == "__main__":
 
     print(desc)
 
-    fig, axes = plt.subplots(8, 4, figsize=(30, 15))
+    fig, axes = plt.subplots(6, 4, figsize=(15, 15))
 
     for i, ax in enumerate(axes.flatten()):
-        sns.heatmap(language_mask[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'viridis', center = 0)
-        ax.set_title(layer_names[i])
+
+        with open(f'../models/gpt2-positions/{layer_names[i]}.pkl', 'rb') as f:
+            pos = pkl.load(f)
+
+        coordinates = pos.coordinates.to(int)
+
+        grid = np.full((28, 28), np.nan)
+        grid[coordinates[:, 0], coordinates[:, 1]] = language_mask[i].astype(int)
+        
+        sns.heatmap(grid, ax=ax, cbar=False, cmap = sns.color_palette("light:black", as_cmap=True), center=0)
+        # sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'RdBu', center = 0)
+        ax.set_title(f'{layer_names[i]}')
         ax.axis('off')
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 0.9, 1])
+
+    cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
+    norm = plt.Normalize(vmin=np.min(language_mask), vmax=np.max(language_mask))
+
+    sm = plt.cm.ScalarMappable(cmap = sns.color_palette("light:black", as_cmap=True), norm=norm)
+    sm.set_array([])
+    fig.colorbar(sm, cax=cbar_ax)
     plt.savefig(SAVE_PATH)
 
     with open(f'data/lmask.pkl', 'wb') as f:

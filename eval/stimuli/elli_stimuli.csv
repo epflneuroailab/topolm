@@ -1,137 +1,137 @@
 word,category,class
-crow,birds,noun
-duck,birds,noun
-dove,birds,noun
-swan,birds,noun
-goose,birds,noun
-fowl,birds,noun
-crane,birds,noun
-hawk,birds,noun
-finch,birds,noun
-quail,birds,noun
-owl,birds,noun
-falcon,birds,noun
-parrot,birds,noun
-seagull,birds,noun
-peacock,birds,noun
-sparrow,birds,noun
-vulture,birds,noun
-deer,mammals,noun
-goat,mammals,noun
-fox,mammals,noun
-calf,mammals,noun
-ram,mammals,noun
-moose,mammals,noun
-bull,mammals,noun
-ox,mammals,noun
-elk,mammals,noun
-sheep,mammals,noun
-sloth,mammals,noun
-boar,mammals,noun
-hog,mammals,noun
-giraffe,mammals,noun
-lion,mammals,noun
-hippo,mammals,noun
-rhino,mammals,noun
-barn,manmade,noun
-shed,manmade,noun
-maze,manmade,noun
-dam,manmade,noun
-lounge,manmade,noun
-booth,manmade,noun
-vault,manmade,noun
-mosque,manmade,noun
-rink,manmade,noun
-shrine,manmade,noun
-shack,manmade,noun
-moat,manmade,noun
-castle,manmade,noun
-dungeon,manmade,noun
-igloo,manmade,noun
-tepee,manmade,noun
-garage,manmade,noun
-creek,places,noun
-pit,places,noun
-gulf,places,noun
-swamp,places,noun
-reef,places,noun
-ridge,places,noun
-marsh,places,noun
-brook,places,noun
-dune,places,noun
-canyon,places,noun
-iceberg,places,noun
-glacier,places,noun
-meadow,places,noun
-crater,places,noun
-boulder,places,noun
-prairie,places,noun
-bay,places,noun
-stroke,hand,verb
-thump,hand,verb
-yank,hand,verb
-pluck,hand,verb
-clutch,hand,verb
-whack,hand,verb
-jab,hand,verb
-swat,hand,verb
-clench,hand,verb
-prod,hand,verb
-pelt,hand,verb
-flog,hand,verb
-caress,hand,verb
-pummel,hand,verb
-fondle,hand,verb
-wallop,hand,verb
-clobber,hand,verb
-blink,light,verb
-glow,light,verb
-glare,light,verb
-flame,light,verb
-beam,light,verb
-blaze,light,verb
-shine,light,verb
-flash,light,verb
-gleam,light,verb
-flare,light,verb
-glint,light,verb
-sparkle,light,verb
-glitter,light,verb
-twinkle,light,verb
-flicker,light,verb
-glimmer,light,verb
-shimmer,light,verb
-choke,mouth,verb
-crunch,mouth,verb
-munch,mouth,verb
-slurp,mouth,verb
-hum,mouth,verb
-gulp,mouth,verb
-gnaw,mouth,verb
-purse,mouth,verb
-swig,mouth,verb
-consume,mouth,verb
-whistle,mouth,verb
-mutter,mouth,verb
-nibble,mouth,verb
-guzzle,mouth,verb
-gobble,mouth,verb
-pucker,mouth,verb
-bite,mouth,verb
-ring,sound,verb
-beep,sound,verb
-pop,sound,verb
-squeak,sound,verb
-bang,sound,verb
-boom,sound,verb
-swish,sound,verb
-chime,sound,verb
-creak,sound,verb
-shriek,sound,verb
-clink,sound,verb
-plop,sound,verb
-crackle,sound,verb
-rattle,sound,verb
-sizzle,sound,verb
-clatter,sound,verb
-jingle,sound,verb
+the crow,birds,noun
+the duck,birds,noun
+the dove,birds,noun
+the swan,birds,noun
+the goose,birds,noun
+the fowl,birds,noun
+the crane,birds,noun
+the hawk,birds,noun
+the finch,birds,noun
+the quail,birds,noun
+the owl,birds,noun
+the falcon,birds,noun
+the parrot,birds,noun
+the seagull,birds,noun
+the peacock,birds,noun
+the sparrow,birds,noun
+the vulture,birds,noun
+the deer,mammals,noun
+the goat,mammals,noun
+the fox,mammals,noun
+the calf,mammals,noun
+the ram,mammals,noun
+the moose,mammals,noun
+the bull,mammals,noun
+the ox,mammals,noun
+the elk,mammals,noun
+the sheep,mammals,noun
+the sloth,mammals,noun
+the boar,mammals,noun
+the hog,mammals,noun
+the giraffe,mammals,noun
+the lion,mammals,noun
+the hippo,mammals,noun
+the rhino,mammals,noun
+the barn,manmade,noun
+the shed,manmade,noun
+the maze,manmade,noun
+the dam,manmade,noun
+the lounge,manmade,noun
+the booth,manmade,noun
+the vault,manmade,noun
+the mosque,manmade,noun
+the rink,manmade,noun
+the shrine,manmade,noun
+the shack,manmade,noun
+the moat,manmade,noun
+the castle,manmade,noun
+the dungeon,manmade,noun
+the igloo,manmade,noun
+the tepee,manmade,noun
+the garage,manmade,noun
+the creek,places,noun
+the pit,places,noun
+the gulf,places,noun
+the swamp,places,noun
+the reef,places,noun
+the ridge,places,noun
+the marsh,places,noun
+the brook,places,noun
+the dune,places,noun
+the canyon,places,noun
+the iceberg,places,noun
+the glacier,places,noun
+the meadow,places,noun
+the crater,places,noun
+the boulder,places,noun
+the prairie,places,noun
+the bay,places,noun
+to stroke,hand,verb
+to thump,hand,verb
+to yank,hand,verb
+to pluck,hand,verb
+to clutch,hand,verb
+to whack,hand,verb
+to jab,hand,verb
+to swat,hand,verb
+to clench,hand,verb
+to prod,hand,verb
+to pelt,hand,verb
+to flog,hand,verb
+to caress,hand,verb
+to pummel,hand,verb
+to fondle,hand,verb
+to wallop,hand,verb
+to clobber,hand,verb
+to blink,light,verb
+to glow,light,verb
+to glare,light,verb
+to flame,light,verb
+to beam,light,verb
+to blaze,light,verb
+to shine,light,verb
+to flash,light,verb
+to gleam,light,verb
+to flare,light,verb
+to glint,light,verb
+to sparkle,light,verb
+to glitter,light,verb
+to twinkle,light,verb
+to flicker,light,verb
+to glimmer,light,verb
+to shimmer,light,verb
+to choke,mouth,verb
+to crunch,mouth,verb
+to munch,mouth,verb
+to slurp,mouth,verb
+to hum,mouth,verb
+to gulp,mouth,verb
+to gnaw,mouth,verb
+to purse,mouth,verb
+to swig,mouth,verb
+to consume,mouth,verb
+to whistle,mouth,verb
+to mutter,mouth,verb
+to nibble,mouth,verb
+to guzzle,mouth,verb
+to gobble,mouth,verb
+to pucker,mouth,verb
+to bite,mouth,verb
+to ring,sound,verb
+to beep,sound,verb
+to pop,sound,verb
+to squeak,sound,verb
+to bang,sound,verb
+to boom,sound,verb
+to swish,sound,verb
+to chime,sound,verb
+to creak,sound,verb
+to shriek,sound,verb
+to clink,sound,verb
+to plop,sound,verb
+to crackle,sound,verb
+to rattle,sound,verb
+to sizzle,sound,verb
+to clatter,sound,verb
+to jingle,sound,verb

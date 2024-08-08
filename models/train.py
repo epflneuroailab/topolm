@@ -140,7 +140,7 @@ if os.path.exists(meta_path):
 
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embed=n_embed, block_size=block_size,
-                  bias=bias, vocab_size=None, dropout=dropout) # start with model_args from command line
+                  bias=bias, vocab_size=None, dropout=dropout, alpha=alpha) # start with model_args from command line
 if init_from == 'scratch':
     # init a new model from scratch
     logging.info("Initializing a new model from scratch")
@@ -269,7 +269,7 @@ while True:
         losses = estimate_loss()
 
         logging.info('-' * 50)
-        logging.info(f'EVALUATING AND SAVING: ITERATION {iter_num}')
+        logging.info(f'EVALUATING: ITERATION {iter_num}')
         logging.info('Train | ' + ' | '.join([f'{comp} Loss: {loss:.4f}' for comp, loss in zip(['Total', 'Task', 'Spatial'], losses['train'])]))
         logging.info('Valid | ' + ' | '.join([f'{comp} Loss: {loss:.4f}' for comp, loss in zip(['Total', 'Task', 'Spatial'], losses['val'])]))
 
@@ -296,12 +296,13 @@ while True:
                     'best_val_loss': best_val_loss,
                     'config': cfg,
                 }
-                logging.info(f"iteration {iter_num}: saving checkpoint to {out_dir}")
 
                 # if iter_num != eval_interval:
                 #     os.rename(os.path.join(out_dir, 'ckpt.pt'), os.path.join(out_dir, f'ckpt-{(iter_num // eval_interval) - 1}.pt'))
 
-                torch.save(checkpoint, os.path.join(out_dir, f'ckpt-{(iter_num // eval_interval) - 1}.pt'))
+                if iter_num % save_interval == 0:
+                    logging.info(f"... saving checkpoint to {out_dir}/ckpt-{(iter_num // eval_interval) - 1}.pt")
+                    torch.save(checkpoint, os.path.join(out_dir, f'ckpt-{(iter_num // eval_interval) - 1}.pt'))
 
         logging.info('-' * 50)
 
