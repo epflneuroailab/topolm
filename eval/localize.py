@@ -69,7 +69,7 @@ if __name__ == "__main__":
         grid = np.full((28, 28), np.nan)
         grid[coordinates[:, 0], coordinates[:, 1]] = language_mask[i].astype(int)
         
-        sns.heatmap(grid, ax=ax, cbar=False, cmap = sns.color_palette("light:black", as_cmap=True), center=0)
+        sns.heatmap(grid, ax=ax, cbar=False, cmap = sns.color_palette("light:black", as_cmap=True))
         # sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'RdBu', center = 0)
         ax.set_title(f'{layer_names[i]}')
         ax.axis('off')

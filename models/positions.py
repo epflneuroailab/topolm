@@ -175,10 +175,10 @@ def get_neighborhood(center, positions, radius = 5, p = 'inf'):
 # randomly select a center point for a neighborhood (avoiding the edges of the layer)
 def get_center(positions, radius, rng=None):
 
-    N = positions.shape[0]
+    N = int(np.sqrt(positions.shape[0]))
 
-    mask = (positions[:, 0] >= radius) & (positions[:, 0] <= N - radius) & \
-           (positions[:, 1] >= radius) & (positions[:, 1] <= N - radius)
+    mask = (positions[:, 0] >= radius - 1) & (positions[:, 0] <= N - radius) & \
+           (positions[:, 1] >= radius - 1) & (positions[:, 1] <= N - radius)
 
     indices = torch.nonzero(torch.Tensor(mask)).flatten()
 
@@ -199,7 +199,7 @@ def swap_optimize(activations, positions, num_neighborhoods = 10_000, local_step
         # alternative - swap_local keeps track of swapped positions, then swaps neighborhood_indices accordingly
         # but i'm lazy and this works too (also slightly more generalized because train loss isn't 100% pre-optimized)
         center = get_center(positions.coordinates, radius, rng=rng)
-        positions.neighborhood_indices[i] = get_neighborhood(center, positions.coordinates, radius, p)
+        positions.neighborhood_indices[i] = get_neighborhood(center, positions.coordinates, radius + 1, p)
 
         tot_n_swapped += n_swapped
 

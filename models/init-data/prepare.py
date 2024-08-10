@@ -4,7 +4,7 @@ import os
 import tiktoken
 import numpy as np
 
-with open('jabberwocky.txt', 'r', encoding='utf-8') as f:
+with open('nonce.txt', 'r', encoding='utf-8') as f:
     data = f.read()
 
 enc = tiktoken.get_encoding("gpt2")

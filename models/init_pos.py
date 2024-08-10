@@ -73,7 +73,7 @@ for name in layer_names:
 
     for i in range(num_neighborhoods):
         center = get_center(pos.coordinates, radius)
-        pos.neighborhood_indices[i] = get_neighborhood(center, pos.coordinates, radius, p)
+        pos.neighborhood_indices[i] = get_neighborhood(center, pos.coordinates, radius + 1, p)
 
     pos.save('gpt2-positions')
 
