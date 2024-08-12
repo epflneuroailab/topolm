@@ -117,9 +117,9 @@ if __name__ == "__main__":
 
             grid = np.full((28, 28), np.nan)
             grid[coordinates[:, 0], coordinates[:, 1]] = activations[i]
-            sns.heatmap(grid, ax=ax, cbar=False, cmap='viridis', center=0)
+            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu', center=0)
 
-            # sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'viridis', center = 0)
+            # sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'RdBu', center = 0)
             ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
 
@@ -128,7 +128,7 @@ if __name__ == "__main__":
         cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
         norm = colors.TwoSlopeNorm(vmin=np.min(activations), vcenter = 0, vmax=np.max(activations))
 
-        sm = plt.cm.ScalarMappable(cmap = 'viridis', norm=norm)
+        sm = plt.cm.ScalarMappable(cmap = 'RdBu', norm=norm)
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
         adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
         adjusted_p_values = adjusted_p_values.reshape((len(layer_names), activations[0].shape[1]))
-        selectivity = t_values_matrix * (adjusted_p_values < 0.05)
+        selectivity = t_values_matrix # * (adjusted_p_values < 0.05)
 
         fig, axes = plt.subplots(6, 4, figsize=(15, 15))
 
@@ -163,7 +163,7 @@ if __name__ == "__main__":
             grid = np.full((28, 28), np.nan)
             grid[coordinates[:, 0], coordinates[:, 1]] = selectivity[i]
 
-            sns.heatmap(grid, ax=ax, cbar=False, cmap='viridis', center=0)
+            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu', center=0)
             ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
 
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
         norm = colors.TwoSlopeNorm(vmin=np.min(selectivity), vcenter = 0, vmax=np.max(selectivity))
 
-        sm = plt.cm.ScalarMappable(cmap = 'viridis', norm=norm)
+        sm = plt.cm.ScalarMappable(cmap = 'RdBu', norm=norm)
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
         

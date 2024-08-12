@@ -146,26 +146,28 @@ def swap_units(positions, swap_ind):
     positions[swap_ind] = positions[torch.flip(swap_ind, [0])]
 
 # run swap optimization on a neighborhood (tensors should already be masked)
-def swap_local(activations, positions, steps = 500, p = 'inf', rng=None):
+def swap_local(activations, positions, neighborhood, steps = 500, p = 'inf', rng=None):
     
     n_swapped = 0
     old_loss = np.inf
+    coordinates = positions.coordinates[neighborhood]
 
     for i in range(steps):
 
-        swap_ind = torch.randperm(positions.shape[0], generator = rng)[:2]
-        swap_units(positions, swap_ind)
+        swap_ind = torch.randperm(coordinates.shape[0], generator = rng)[:2]
+        swap_units(coordinates, swap_ind)
 
-        loss = local_spatial_loss(activations, positions)
+        loss = local_spatial_loss(activations[:, neighborhood], coordinates)
 
         # if the swapping doesn't decrease loss, unswap and move on
         if loss > old_loss:
-            swap_units(positions, swap_ind)
+            swap_units(coordinates, swap_ind)
         else:
+            swap_units(neighborhood, swap_ind)
             old_loss = loss
             n_swapped += 1
 
-    return positions, n_swapped
+    return coordinates, n_swapped, neighborhood
 
 # binary mask of points within 'radius' of center
 def get_neighborhood(center, positions, radius = 5, p = 'inf'):
@@ -185,7 +187,7 @@ def get_center(positions, radius, rng=None):
     return indices[torch.randint(0, len(indices), (1,), generator = rng).item()]
 
 # identify neighborhoods and run local optimization on each
-def swap_optimize(activations, positions, num_neighborhoods = 10_000, local_steps = 500, radius = 5, p = 'inf', rng=None):
+def swap_optimize(activations, positions, num_neighborhoods, local_steps = 500, radius = 5, p = 'inf', rng=None):
 
     tot_n_swapped = 0
 
@@ -193,18 +195,14 @@ def swap_optimize(activations, positions, num_neighborhoods = 10_000, local_step
 
         # do pre-optimization on predetermined neighborhood
         neighborhood = positions.neighborhood_indices[i].to(bool)
-        positions.coordinates[neighborhood], n_swapped = swap_local(activations[:, neighborhood], positions.coordinates[neighborhood], local_steps, p, rng=rng)
+        positions.coordinates[neighborhood], n_swapped, neighborhood = swap_local(activations, positions, neighborhood, local_steps, p, rng=rng)
 
-        # because things have been swapped, need a new neighborhood mask
-        # alternative - swap_local keeps track of swapped positions, then swaps neighborhood_indices accordingly
-        # but i'm lazy and this works too (also slightly more generalized because train loss isn't 100% pre-optimized)
-        center = get_center(positions.coordinates, radius, rng=rng)
-        positions.neighborhood_indices[i] = get_neighborhood(center, positions.coordinates, radius + 1, p)
+        # replace the neighborhood with the swapped version
+        positions.neighborhood_indices[i] = neighborhood.to(int)
 
         tot_n_swapped += n_swapped
 
     return positions, tot_n_swapped
-
 
 ### NUMPY SPATIAL LOSS FUNCTIONS ###
 # these are NOT used anywhere, they are just a guide

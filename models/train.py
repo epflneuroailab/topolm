@@ -46,13 +46,6 @@ for i, arg in enumerate(sys.argv):
 cfg = OmegaConf.load(cfg_file)
 cfg.update(OmegaConf.from_cli())
 
-# important_cfg_keys = [
-#     'dataset', 'batch_size', 'block_size', 'gradient_accumulation_steps', 
-#     'n_layer', 'n_head', 'n_embed', 'dropout', 'bias', 'learning_rate', 
-#     'max_iters', 'weight_decay', 'beta1', 'beta2', 'grad_clip', 'decay_lr', 
-#     'warmup_iters', 'lr_decay_iters', 'min_lr'
-# ]
-
 for key in cfg:
     try:
         exec(key + '=' + str(cfg[key]))
@@ -140,7 +133,7 @@ if os.path.exists(meta_path):
 
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embed=n_embed, block_size=block_size,
-                  bias=bias, vocab_size=None, dropout=dropout, alpha=alpha) # start with model_args from command line
+                  bias=bias, vocab_size=None, dropout=dropout, alpha=alpha, position_dir=position_dir) # start with model_args from command line
 if init_from == 'scratch':
     # init a new model from scratch
     logging.info("Initializing a new model from scratch")

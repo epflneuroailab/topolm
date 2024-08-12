@@ -57,25 +57,35 @@ X, Y = get_batch()
 
 ### INTIALIZE MODEL ###
 
+position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch)
+
 layer_names = []
 for i in range(n_layer):
     layer_names.append(f'layer.{i}.attn')
     layer_names.append(f'layer.{i}.mlp')
 
+# total possible number of neighborhoods (assuming sup norm)
+N = int(np.sqrt(n_embed))
+num_neighborhoods = (int(np.sqrt(n_embed)) - 2 * (radius - 1)) ** 2
+
 # init layer positions with random neighborhoods
 for name in layer_names:
-    
+
     pos = LayerPositions(
         name = name,
         coordinates = torch.Tensor(list(product(np.arange(28), repeat = 2))),
         neighborhood_indices = torch.zeros(size=(num_neighborhoods, n_embed), dtype=int),
         neighborhoods_per_batch = neighborhoods_per_batch)
 
-    for i in range(num_neighborhoods):
-        center = get_center(pos.coordinates, radius)
-        pos.neighborhood_indices[i] = get_neighborhood(center, pos.coordinates, radius + 1, p)
+    mask = (pos.coordinates[:, 0] >= radius - 1) & (pos.coordinates[:, 0] <= N - radius) & \
+           (pos.coordinates[:, 1] >= radius - 1) & (pos.coordinates[:, 1] <= N - radius)
 
-    pos.save('gpt2-positions')
+    indices = torch.nonzero(torch.Tensor(mask)).flatten()
+
+    for i, center in enumerate(indices):
+        pos.neighborhood_indices[i] = get_neighborhood(center, pos.coordinates, radius, p)
+
+    pos.save(position_dir)
 
 print('Initialized all layer positions and neighborhoods...')
 
@@ -86,7 +96,8 @@ model_args = dict(
                     block_size=block_size,
                     bias=bias,
                     vocab_size=vocab_size,
-                    dropout=dropout
+                    dropout=dropout,
+                    position_dir=position_dir
                 )
 
 gptconf = GPTConfig(**model_args)
@@ -105,7 +116,7 @@ with torch.no_grad():
 for name in layer_names:
     activations[name] = spatial_outputs[name][0]
 
-network_positions = NetworkPositions.load_from_dir('gpt2-positions')
+network_positions = NetworkPositions.load_from_dir(position_dir)
 
 def print_layer(name):
     layer_line = f' LAYER {name} '
@@ -130,4 +141,4 @@ for name in layer_names:
     print(f'global loss decreased by {(old_loss - new_loss):.3f} | swapped {n_swapped}/{local_steps * num_neighborhoods} possible pairs')
     
     layer_positions = layer_positions.to('cpu')
-    layer_positions.save('gpt2-positions')
+    layer_positions.save(position_dir)
