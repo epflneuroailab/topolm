@@ -8,20 +8,22 @@ from matplotlib.colors import ListedColormap
 
 import scipy
 import numpy as np
+from omegaconf import OmegaConf
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
 import positions
 
-DUMP_PATH = 'data/extract.pkl'
-SAVE_PATH = '../figures/lmask.png'
+DUMP_PATH = 'data/localizer/extract-'
+SAVE_PATH = '../figures/visualizations/'
 
 def is_topk(a, k=1):
     _, rix = np.unique(-a, return_inverse=True)
     return np.where(rix < k, 1, 0).reshape(a.shape)
 
 if __name__ == "__main__":
+    cfg = OmegaConf.from_cli()
 
-    with open(DUMP_PATH, 'rb') as f:
+    with open(DUMP_PATH + cfg.model + '.pkl', 'rb') as f:
         data = pkl.load(f)
 
     layer_names = []
@@ -58,10 +60,13 @@ if __name__ == "__main__":
     print(desc)
 
     fig, axes = plt.subplots(6, 4, figsize=(15, 15))
+    plt.suptitle(f'radius {cfg.model.split('-')[0]} | {cfg.model.split('-')[1]} per batch',
+        ha='center',
+        fontsize=24)
 
     for i, ax in enumerate(axes.flatten()):
 
-        with open(f'../models/gpt2-positions/{layer_names[i]}.pkl', 'rb') as f:
+        with open('../models/gpt2-positions-' + str(cfg.model) + '/' + layer_names[i] + '.pkl', 'rb') as f:
             pos = pkl.load(f)
 
         coordinates = pos.coordinates.to(int)
@@ -74,7 +79,7 @@ if __name__ == "__main__":
         ax.set_title(f'{layer_names[i]}')
         ax.axis('off')
 
-    plt.tight_layout(rect=[0, 0, 0.9, 1])
+    plt.tight_layout(rect=[0, 0, 0.9, 0.98])
 
     cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
     norm = plt.Normalize(vmin=np.min(language_mask), vmax=np.max(language_mask))
@@ -82,7 +87,7 @@ if __name__ == "__main__":
     sm = plt.cm.ScalarMappable(cmap = sns.color_palette("light:black", as_cmap=True), norm=norm)
     sm.set_array([])
     fig.colorbar(sm, cax=cbar_ax)
-    plt.savefig(SAVE_PATH)
+    plt.savefig(SAVE_PATH + cfg.model + '/lmask.png')
 
-    with open(f'data/lmask.pkl', 'wb') as f:
+    with open(f'data/localizer/lmask-{cfg.model}.pkl', 'wb') as f:
         pkl.dump(language_mask, f)

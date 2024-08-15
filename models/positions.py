@@ -128,7 +128,7 @@ def local_spatial_loss(activations, positions):
     return 0.5 * (1 - torch.corrcoef(torch.stack([r[idx], D[idx]], dim = 0))[0, 1])
 
 # compute spatial loss for an entire batch
-def spatial_loss_fn(activations, positions):
+def spatial_loss_fn(activations, positions, accum='mean'):
 
     cur_loss = []
     neighborhoods = torch.randperm(len(positions.neighborhood_indices))[:positions.neighborhoods_per_batch]
@@ -137,7 +137,12 @@ def spatial_loss_fn(activations, positions):
         mask = positions.neighborhood_indices[i].to(bool)
         cur_loss.append(local_spatial_loss(activations[:, mask], positions.coordinates[mask]))
 
-    return torch.stack(cur_loss).mean()
+    if accum == 'mean':
+        return torch.stack(cur_loss).mean()
+    elif accum == 'maximum':
+        return torch.stack(cur_loss).max()
+    else:
+        raise ValueError("invalid accumulation function")
 
 ### PRE OPTIMIZATION ###
 

@@ -109,6 +109,8 @@ class GPTConfig:
     bias: bool = True # True: bias in Linears and LayerNorms, like GPT-2. False: a bit better and faster
     position_dir: str = 'gpt2-positions'
     alpha: float = 0.25
+    accum: str = 'mean'
+    activation_decay: float = 0.0
 
 class GPT(nn.Module):
 
@@ -198,10 +200,18 @@ class GPT(nn.Module):
             task_loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
 
             spatial_loss = 0
-            for i, name in enumerate(spatial_outputs):
-                spatial_loss += self.alphas[i] * spatial_loss_fn(*spatial_outputs[name])
+            reg_loss = 0
 
-            loss = task_loss + spatial_loss
+            if self.config.alpha != 0:
+
+                for i, name in enumerate(spatial_outputs):
+                    spatial_loss += self.alphas[i] * spatial_loss_fn(*spatial_outputs[name], self.config.accum)
+                    reg_loss += (spatial_outputs[name][0] ** 2).sum(dim = 1).mean()
+
+            else:
+                spatial_loss = torch.Tensor([0]).to(device)
+
+            loss = task_loss + spatial_loss + self.config.activation_decay * reg_loss
         else:
             # inference-time mini-optimization: only forward the lm_head on the very last position
             logits = self.lm_head(x[:, [-1], :]) # note: using list [-1] to preserve the time dim

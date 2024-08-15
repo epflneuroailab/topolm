@@ -3,7 +3,7 @@
 # $ torchrun --standalone --nproc_per_node=8 train.py config/train_gpt2.py
 
 # I/O
-out_dir: "'out/run-' + str(time.time())"
+out_dir: "'out/'"
 always_save_checkpoint: True # if True, always save a checkpoint after each eval
 init_from: 'scratch' # 'scratch' or 'resume' or 'gpt2*'
 
@@ -32,12 +32,14 @@ n_head: 16
 n_embed: 784
 dropout: 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias: False # do we use bias inside LayerNorm and Linear layers?
-alpha: 0.25
+alpha: 1.0
+accum: 'mean'
+activation_decay: 0
 
 # wandb logging
 wandb_log: True # disabled by default
-wandb_project: 'gpt2-spatial-fineweb'
-wandb_run_name: "'gpt2-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-' + str(alpha) + '-' + str(batch_size)"
+wandb_project: 'topo-gpt'
+wandb_run_name: 'gpt2'
 
 # adamw optimizer
 learning_rate: 6e-4 # max learning rate

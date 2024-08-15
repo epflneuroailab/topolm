@@ -10,6 +10,7 @@ import numpy as np
 import tiktoken
 import itertools
 from tqdm import tqdm
+from omegaconf import OmegaConf
 from collections import defaultdict
 
 import torch
@@ -18,8 +19,9 @@ from torch.utils.data import Dataset, DataLoader
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
 from model import GPT, GPTConfig
 
-MODEL_FILE = '../models/out/ckpt.pt'
-SAVE_PATH = 'data/extract.pkl'
+# MODEL_FILE = '../models/out/ckpt.pt'
+MODEL_DIR = '../models/out/'
+SAVE_PATH = 'data/localizer/'
 STIMULI_DIR = 'stimuli/fedorenko10_stimuli'
 
 class Fed10_LocLangDataset(Dataset):
@@ -68,10 +70,11 @@ class Fed10_LocLangDataset(Dataset):
 
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
+    cfg = OmegaConf.from_cli()
 
-    checkpoint = torch.load(MODEL_FILE, map_location=device)
+    checkpoint = torch.load(MODEL_DIR + 'ckpt-' + str(cfg.model) + '.pt', map_location=device)
     model_args = checkpoint['model_args']
-    model_args['position_dir'] = '../models/gpt2-positions/'
+    model_args['position_dir'] = '../models/gpt2-positions-' + str(cfg.model) + '/'
 
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
@@ -133,5 +136,5 @@ if __name__ == "__main__":
         final_layer_representations['non-words'][layer] = torch.stack(activations[layer][:num_samples])
         final_layer_representations['sentences'][layer] = torch.stack(activations[layer][num_samples:])
 
-    with open(os.path.expanduser(SAVE_PATH), 'wb') as f:
+    with open(os.path.expanduser(SAVE_PATH + 'extract-' + cfg.model + '.pkl'), 'wb') as f:
         pkl.dump(final_layer_representations, f)

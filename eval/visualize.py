@@ -26,11 +26,17 @@ def clip_by_sd(arr, alpha = 2):
 
 if __name__ == "__main__":
     cfg = OmegaConf.from_cli()
+    position_dir = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods)
 
     print('Loading data...')
 
-    with open(DATA_PATH + cfg.stimulus + '.pkl', 'rb') as f:
+    params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
+    params = '-'.join([str(p) for p in params])
+
+    with open(DATA_PATH + params + '/' + cfg.stimulus + '.pkl', 'rb') as f:
         data = pkl.load(f)
+
+    os.makedirs(SAVE_PATH + params + '/' + cfg.stimulus, exist_ok = True)
 
     num_units = 784
     layer_names = []
@@ -105,11 +111,14 @@ if __name__ == "__main__":
         # (n_layers, n_embed)
         activations = data[condition].mean(axis = 0)
 
-        fig, axes = plt.subplots(6, 4, figsize=(15, 15))
+        fig, axes = plt.subplots(6, 4, figsize=(15, 17))
+        plt.suptitle(f'{cfg.stimulus} | {condition} | decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
+            ha='center',
+            fontsize=24)
 
         for i, ax in enumerate(axes.flatten()):
 
-            with open(f'../models/gpt2-positions/{layer_names[i]}.pkl', 'rb') as f:
+            with open(f'{position_dir}/{layer_names[i]}.pkl', 'rb') as f:
                 pos = pkl.load(f)
 
             coordinates = pos.coordinates.to(int)
@@ -117,22 +126,22 @@ if __name__ == "__main__":
 
             grid = np.full((28, 28), np.nan)
             grid[coordinates[:, 0], coordinates[:, 1]] = activations[i]
-            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu', center=0)
+            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
 
-            # sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'RdBu', center = 0)
+            # sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'RdBu_r', center = 0)
             ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
 
-        plt.tight_layout(rect=[0, 0, 0.9, 1])
+        plt.tight_layout(rect=[0, 0, 0.9, 0.98])
 
         cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
         norm = colors.TwoSlopeNorm(vmin=np.min(activations), vcenter = 0, vmax=np.max(activations))
 
-        sm = plt.cm.ScalarMappable(cmap = 'RdBu', norm=norm)
+        sm = plt.cm.ScalarMappable(cmap = 'RdBu_r', norm=norm)
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
 
-        plt.savefig(SAVE_PATH + cfg.stimulus + '/' + condition + '.png')
+        plt.savefig(SAVE_PATH + params + '/'  + cfg.stimulus + '/' + condition + '.png')
 
     ### CONTRAST PLOTS ###
     print('Plotting all contrasts...')
@@ -149,13 +158,16 @@ if __name__ == "__main__":
 
         adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
         adjusted_p_values = adjusted_p_values.reshape((len(layer_names), activations[0].shape[1]))
-        selectivity = t_values_matrix # * (adjusted_p_values < 0.05)
+        selectivity = t_values_matrix * (adjusted_p_values < 0.05)
 
-        fig, axes = plt.subplots(6, 4, figsize=(15, 15))
+        fig, axes = plt.subplots(6, 4, figsize=(15, 17))
+        plt.suptitle(f'{cfg.stimulus} | {condition} | decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
+            ha='center',
+            fontsize=24)
 
         for i, ax in enumerate(axes.flatten()):
 
-            with open(f'../models/gpt2-positions/{layer_names[i]}.pkl', 'rb') as f:
+            with open(f'{position_dir}/{layer_names[i]}.pkl', 'rb') as f:
                 pos = pkl.load(f)
 
             coordinates = pos.coordinates.to(int)
@@ -163,17 +175,18 @@ if __name__ == "__main__":
             grid = np.full((28, 28), np.nan)
             grid[coordinates[:, 0], coordinates[:, 1]] = selectivity[i]
 
-            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu', center=0)
+            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
             ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
 
-        plt.tight_layout(rect=[0, 0, 0.9, 1])
+        plt.tight_layout(rect=[0, 0, 0.9, 0.98])
 
         cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
-        norm = colors.TwoSlopeNorm(vmin=np.min(selectivity), vcenter = 0, vmax=np.max(selectivity))
+        bound = max(abs(np.min(selectivity)), abs(np.max(selectivity)))
+        norm = colors.TwoSlopeNorm(vmin=-bound, vcenter = 0, vmax=bound)
 
-        sm = plt.cm.ScalarMappable(cmap = 'RdBu', norm=norm)
+        sm = plt.cm.ScalarMappable(cmap = 'RdBu_r', norm=norm)
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
         
-        plt.savefig(SAVE_PATH + cfg.stimulus + '/' + condition + '.png')
+        plt.savefig(SAVE_PATH + params + '/'  + cfg.stimulus + '/' + condition + '.png')

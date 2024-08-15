@@ -55,6 +55,7 @@ for key in cfg:
     # if key not in important_cfg_keys:
     #     del cfg[key]
 
+out_dir += 'run-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-' + str(alpha) + '-' + str(batch_size) + '-' + str(accum) + '-' + str(activation_decay)
 cfg = OmegaConf.to_container(cfg)
 
 # various inits, derived attributes, I/O setup
@@ -78,18 +79,24 @@ else:
     seed_offset = 0
     ddp_world_size = 1
 
-os.makedirs(out_dir, exist_ok=True)
+if master_process:
+    os.makedirs(out_dir, exist_ok=True)
 
-# logging
-logging.basicConfig(filename=os.path.join(out_dir, 'logs.txt'),
-    level=logging.DEBUG,
-    format='%(asctime)s %(message)s',
-    filemode='w')
+    # logging
+    logging.basicConfig(filename=os.path.join(out_dir, 'logs.txt'),
+        level=logging.DEBUG,
+        format='%(asctime)s %(message)s',
+        filemode='w')
 
-logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)
+
+def quick_log(s):
+    if master_process:
+        logging.info(s)
 
 tokens_per_iter = gradient_accumulation_steps * ddp_world_size * batch_size * block_size
-logging.info(f"tokens per iteration will be: {tokens_per_iter:,}")
+
+quick_log(f"tokens per iteration will be: {tokens_per_iter:,}")
 
 torch.manual_seed(1337 + seed_offset)
 torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
@@ -129,22 +136,26 @@ if os.path.exists(meta_path):
     with open(meta_path, 'rb') as f:
         meta = pickle.load(f)
     meta_vocab_size = meta['vocab_size']
-    logging.info(f"found vocab_size = {meta_vocab_size} (inside {meta_path})")
+    quick_log(f"found vocab_size = {meta_vocab_size} (inside {meta_path})")
 
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embed=n_embed, block_size=block_size,
-                  bias=bias, vocab_size=None, dropout=dropout, alpha=alpha, position_dir=position_dir) # start with model_args from command line
+                  bias=bias, vocab_size=None, dropout=dropout, alpha=alpha, position_dir=position_dir, accum=accum, activation_decay=activation_decay) # start with model_args from command line
 if init_from == 'scratch':
     # init a new model from scratch
-    logging.info("Initializing a new model from scratch")
+    quick_log("Initializing a new model from scratch")
     # determine the vocab size we'll use for from-scratch training
     if meta_vocab_size is None:
-        logging.info("defaulting to vocab_size of GPT-2 to 50304 (50257 rounded up for efficiency)")
+        quick_log("defaulting to vocab_size of GPT-2 to 50304 (50257 rounded up for efficiency)")
     model_args['vocab_size'] = meta_vocab_size if meta_vocab_size is not None else 50304
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
+
+    print(gptconf)
+    quick_log(gptconf)
+
 elif init_from == 'resume':
-    logging.info(f"Resuming training from {out_dir}")
+    quick_log(f"Resuming training from {out_dir}")
 
     # resume training from a checkpoint
     ckpt_file = max(
@@ -153,7 +164,7 @@ elif init_from == 'resume':
         default=None
     )
 
-    logging.info(f'resuming from file: {ckpt_file}')
+    quick_log(f'resuming from file: {ckpt_file}')
     print(f'resuming from file: {ckpt_file}')
 
     ckpt_path = os.path.join(out_dir, ckpt_file)
@@ -166,6 +177,10 @@ elif init_from == 'resume':
     # create the model
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
+    
+    print(gptconf)
+    quick_log(gptconf)
+
     state_dict = checkpoint['model']
     # fix the keys of the state dictionary :(
     # honestly no idea how checkpoints sometimes get this prefix, have to debug more
@@ -177,7 +192,7 @@ elif init_from == 'resume':
     iter_num = checkpoint['iter_num']
     best_val_loss = checkpoint['best_val_loss']
 elif init_from.startswith('gpt2'):
-    logging.info(f"Initializing from OpenAI GPT-2 weights: {init_from}")
+    quick_log(f"Initializing from OpenAI GPT-2 weights: {init_from}")
     # initialize from OpenAI GPT-2 weights
     override_args = dict(dropout=dropout)
     model = GPT.from_pretrained(init_from, override_args)
@@ -201,7 +216,7 @@ checkpoint = None # free up memory
 
 # compile the model
 if compile:
-    logging.info("compiling the model... (takes a ~minute)")
+    quick_log("compiling the model... (takes a ~minute)")
     unoptimized_model = model
     model = torch.compile(model) # requires PyTorch 2.0
 
@@ -252,6 +267,7 @@ def iterlog(iter_num, lossf, task_loss, spatial_loss, dt, running_mfu):
 # logging
 if wandb_log and master_process:
     import wandb
+    wandb_run_name += '-r' + str(radius) + '-n' + str(neighborhoods_per_batch) + '-a' + str(alpha) + '-b' + str(batch_size) + '-' + str(accum)
     if init_from == 'resume':
         wandb.init(project=wandb_project, name=wandb_run_name, id=wandb_run_id, config=cfg, resume = "must")
     else:
@@ -310,7 +326,7 @@ while True:
                     logging.info(f"... saving checkpoint to {out_dir}/ckpt-{(iter_num // eval_interval) - 1}.pt")
                     torch.save(checkpoint, os.path.join(out_dir, f'ckpt-{(iter_num // eval_interval) - 1}.pt'))
 
-        logging.info('-' * 50)
+            logging.info('-' * 50)
 
     if iter_num == 0 and eval_only:
         break
@@ -352,7 +368,7 @@ while True:
         if local_iter_num >= 5: # let the training loop settle a bit
             mfu = raw_model.estimate_mfu(batch_size * gradient_accumulation_steps, dt)
             running_mfu = mfu if running_mfu == -1.0 else 0.9*running_mfu + 0.1*mfu
-        logging.info(iterlog(iter_num, lossf, task_loss, spatial_loss, dt, running_mfu))
+        quick_log(iterlog(iter_num, lossf, task_loss, spatial_loss, dt, running_mfu))
     iter_num += 1
     local_iter_num += 1
 
