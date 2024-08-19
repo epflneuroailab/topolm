@@ -24,6 +24,10 @@ def clip_by_sd(arr, alpha = 2):
     std = np.std(arr)
     return np.clip(arr, mean - alpha * std, mean + alpha * std)
 
+def log_transform(x):
+    return (2 / (1 + np.exp(-0.5 * x))) - 1
+    # return np.log(np.abs(x) + 1) * np.sign(x)
+
 if __name__ == "__main__":
     cfg = OmegaConf.from_cli()
     position_dir = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods)
@@ -94,12 +98,13 @@ if __name__ == "__main__":
             ]
         }
     elif cfg.stimulus == 'elli':
-        all_conditions = sorted(['birds_noun', 'hand_verb', 'light_verb', 'mammals_noun', 'manmade_noun', 'mouth_verb', 'places_noun', 'sound_verb'])
+        all_conditions = sorted(['bird_noun', 'hand_verb', 'light_verb', 'mammal_noun', 'manmade_noun', 'mouth_verb', 'natural_noun', 'sound_verb'])
+        # all_conditions = sorted(['birds_noun', 'hand_verb', 'light_verb', 'mammals_noun', 'manmade_noun', 'mouth_verb', 'places_noun', 'sound_verb'])
 
         contrasts = {
-            'noun-verb' : [
+            'noun_verb' : [
                 np.concatenate([data[key] for key in all_conditions if key[-4:] == 'noun'], axis=0),
-                np.concatenate([data[key] for key in all_conditions if key[-4:] == 'verb'], axis=0),
+                np.concatenate([data[key] for key in all_conditions if key[-4:] == 'verb'], axis=0)
             ]
         }
     else:
@@ -111,7 +116,7 @@ if __name__ == "__main__":
         # (n_layers, n_embed)
         activations = data[condition].mean(axis = 0)
 
-        fig, axes = plt.subplots(6, 4, figsize=(15, 17))
+        fig, axes = plt.subplots(6, 4, figsize=(15, 20))
         plt.suptitle(f'{cfg.stimulus} | {condition} | decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
             ha='center',
             fontsize=24)
@@ -125,6 +130,7 @@ if __name__ == "__main__":
             # activations[i] = clip_by_sd(activations[i])
 
             grid = np.full((28, 28), np.nan)
+            activations[i] = log_transform(activations[i])
             grid[coordinates[:, 0], coordinates[:, 1]] = activations[i]
             sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
 
@@ -153,14 +159,14 @@ if __name__ == "__main__":
         for layer_idx, layer_name in enumerate(layer_names):
         
             # (num_samples, n_embed)
-            activations = (contrasts[condition][0][layer_idx], contrasts[condition][1][layer_idx])
+            activations = (contrasts[condition][0][:, layer_idx, :], contrasts[condition][1][:, layer_idx, :])
             t_values_matrix[layer_idx], p_values_matrix[layer_idx] = scipy.stats.ttest_ind(activations[0], activations[1], axis=0, equal_var=False)
 
         adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
         adjusted_p_values = adjusted_p_values.reshape((len(layer_names), activations[0].shape[1]))
         selectivity = t_values_matrix * (adjusted_p_values < 0.05)
 
-        fig, axes = plt.subplots(6, 4, figsize=(15, 17))
+        fig, axes = plt.subplots(6, 4, figsize=(15, 20))
         plt.suptitle(f'{cfg.stimulus} | {condition} | decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
             ha='center',
             fontsize=24)
@@ -189,4 +195,4 @@ if __name__ == "__main__":
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
         
-        plt.savefig(SAVE_PATH + params + '/'  + cfg.stimulus + '/' + condition + '.png')
+        plt.savefig(SAVE_PATH + params + '/'  + cfg.stimulus + '/' + condition + '_contrast.png')

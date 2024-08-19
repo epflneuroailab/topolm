@@ -25,7 +25,7 @@ SAVE_PATH = 'data/responses/'
 
 FEDORENKO = 'stimuli/fedorenko_stimuli.csv'
 MOSELEY= 'stimuli/moseley_stimuli.csv'
-ELLI = 'stimuli/elli_stimuli.csv'
+ELLI = 'stimuli/elli_pairs.csv'
 
 class Fedorenko_Dataset(Dataset):
     def __init__(self, is_pretrained):
@@ -103,7 +103,7 @@ class Elli_Dataset(Dataset):
         data = pd.read_csv(os.path.expanduser(ELLI))
         data['condition'] = data[['category', 'class']].agg('_'.join, axis=1)
 
-        vocab = set(' '.join(data['word']).split())
+        vocab = set(' '.join(data['pair']).split())
 
         self.is_pretrained = is_pretrained
 
@@ -111,12 +111,12 @@ class Elli_Dataset(Dataset):
         self.w2idx = {w: i for i, w in enumerate(self.vocab)}
         self.idx2w = {i: w for i, w in enumerate(self.vocab)}
 
-        items = list(zip(data['word'], data['condition']))
+        items = list(zip(data['pair'], data['condition']))
         self.items = sorted(items, key = lambda x: x[1])
         
         self.all_conditions = sorted(set([i[1] for i in self.items]))
         self.num_samples = len(self.items) // len(self.all_conditions)
-        self.batch_size = 10
+        self.batch_size = 18
 
     def tokenize(self, sent):
         return torch.tensor([self.w2idx[w]+20_000 for w in sent.split()])
@@ -175,6 +175,11 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'provided stimulus ({cfg.stimulus}) currently not supported!')
 
+    # print(dataset.items) len = 8 * 72 = 576
+    # print(dataset.all_conditions) len = 8
+    # print(dataset.num_samples) 72
+    # print(dataset.batch_size) 18
+
     dataloader = DataLoader(dataset, batch_size=dataset.batch_size)
 
     activations = defaultdict(list)
@@ -197,15 +202,15 @@ if __name__ == "__main__":
             reshaped = spatial_outputs[layer][0].view(batch_size, batch_len, -1).mean(axis=1).detach().cpu()
 
             for i in range(batch_size):
-                activations[layer].append(reshaped[i])
+                activations[layer].append((reshaped[i], input_type[i]))
 
     final_responses = defaultdict(list)
     for i in range(len(activations[layer_names[0]])):
 
-        condition = dataset.all_conditions[i // dataset.num_samples]
+        condition = activations[layer_names[0]][i][1] # dataset.all_conditions[i // dataset.num_samples]
 
         # activations[layer][i] is (n_embed,) so tot_activations is (n_layers, n_embed)
-        tot_activations = np.array([activations[layer][i] for layer in activations])
+        tot_activations = np.array([activations[layer][i][0] for layer in activations])
         final_responses[condition].append(tot_activations)
 
     for condition in final_responses:
