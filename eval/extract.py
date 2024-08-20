@@ -72,9 +72,12 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
     cfg = OmegaConf.from_cli()
 
-    checkpoint = torch.load(MODEL_DIR + 'ckpt-' + str(cfg.model) + '.pt', map_location=device)
+    params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
+    params = '-'.join([str(p) for p in params])
+
+    checkpoint = torch.load(MODEL_DIR + 'ckpt-' + params + '.pt', map_location=device)
     model_args = checkpoint['model_args']
-    model_args['position_dir'] = '../models/gpt2-positions-' + str(cfg.model) + '/'
+    model_args['position_dir'] = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods) + '/'
 
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
@@ -136,5 +139,8 @@ if __name__ == "__main__":
         final_layer_representations['non-words'][layer] = torch.stack(activations[layer][:num_samples])
         final_layer_representations['sentences'][layer] = torch.stack(activations[layer][num_samples:])
 
-    with open(os.path.expanduser(SAVE_PATH + 'extract-' + cfg.model + '.pkl'), 'wb') as f:
+    savedir = SAVE_PATH + params
+    os.makedirs(savedir, exist_ok = True)
+
+    with open(os.path.expanduser(savedir + '/extract.pkl'), 'wb') as f:
         pkl.dump(final_layer_representations, f)

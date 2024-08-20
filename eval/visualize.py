@@ -11,6 +11,8 @@ from matplotlib import colors
 import scipy
 import numpy as np
 
+from hrf import NeuronSmoothing
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
 import positions
 
@@ -29,8 +31,21 @@ def log_transform(x):
     # return np.log(np.abs(x) + 1) * np.sign(x)
 
 if __name__ == "__main__":
-    cfg = OmegaConf.from_cli()
+
+    cfg_file = 'vis_gpt2.yaml'
+    for i, arg in enumerate(sys.argv):
+        if arg[:3] == 'cfg':
+            cfg_file = arg.split('=')[1]
+            sys.argv.pop(i)
+
+    cfg = OmegaConf.load(cfg_file)
+    cfg.update(OmegaConf.from_cli())
+
     position_dir = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods)
+
+    fwhm_mm = 2.5
+    resolution_mm = 1
+    smoothing = NeuronSmoothing(fwhm_mm=fwhm_mm, resolution_mm=resolution_mm)
 
     print('Loading data...')
 
@@ -127,14 +142,15 @@ if __name__ == "__main__":
                 pos = pkl.load(f)
 
             coordinates = pos.coordinates.to(int)
-            # activations[i] = clip_by_sd(activations[i])
+
+            coordinates = pos.coordinates.to(int)
+            gridx, gridy, smoothed_activations = smoothing(coordinates.numpy(), activations[i])
+            # ax.scatter(gridy, -gridx, c=smoothed_activations, cmap='RdBu_r', s=32, marker='s')
 
             grid = np.full((28, 28), np.nan)
-            activations[i] = log_transform(activations[i])
-            grid[coordinates[:, 0], coordinates[:, 1]] = activations[i]
+            grid[gridx.astype(int).squeeze(), gridy.astype(int).squeeze()] = smoothed_activations
             sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
 
-            # sns.heatmap(activations[i].reshape(28, 28), ax = ax, cbar = False, cmap = 'RdBu_r', center = 0)
             ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
 
@@ -155,11 +171,23 @@ if __name__ == "__main__":
 
         p_values_matrix = np.zeros((len(layer_names), num_units))
         t_values_matrix = np.zeros((len(layer_names), num_units))
+        grids = dict()
 
         for layer_idx, layer_name in enumerate(layer_names):
+
+            with open(f'{position_dir}/{layer_name}.pkl', 'rb') as f:
+                pos = pkl.load(f)
+
+            coordinates = pos.coordinates.to(int)
         
             # (num_samples, n_embed)
-            activations = (contrasts[condition][0][:, layer_idx, :], contrasts[condition][1][:, layer_idx, :])
+            activations = [contrasts[condition][0][:, layer_idx, :], contrasts[condition][1][:, layer_idx, :]]
+
+            for i, act in enumerate(activations):
+                gridx, gridy, activations[i] = smoothing(coordinates.numpy(), act)
+            
+            grids[layer_idx] = (gridx, gridy)
+
             t_values_matrix[layer_idx], p_values_matrix[layer_idx] = scipy.stats.ttest_ind(activations[0], activations[1], axis=0, equal_var=False)
 
         adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
@@ -173,22 +201,23 @@ if __name__ == "__main__":
 
         for i, ax in enumerate(axes.flatten()):
 
-            with open(f'{position_dir}/{layer_names[i]}.pkl', 'rb') as f:
-                pos = pkl.load(f)
+            # grid = np.full((28, 28), np.nan)
+            # grid[coordinates[:, 0], coordinates[:, 1]] = selectivity[i]
 
-            coordinates = pos.coordinates.to(int)
+            gridx, gridy = grids[i]
 
             grid = np.full((28, 28), np.nan)
-            grid[coordinates[:, 0], coordinates[:, 1]] = selectivity[i]
-
+            grid[gridx.astype(int).squeeze(), gridy.astype(int).squeeze()] = selectivity[i]
             sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
+
+            # sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
             ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
 
         plt.tight_layout(rect=[0, 0, 0.9, 0.98])
 
         cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
-        bound = max(abs(np.min(selectivity)), abs(np.max(selectivity)))
+        bound = max(abs(np.min(smoothed_activations)), abs(np.max(smoothed_activations)))
         norm = colors.TwoSlopeNorm(vmin=-bound, vcenter = 0, vmax=bound)
 
         sm = plt.cm.ScalarMappable(cmap = 'RdBu_r', norm=norm)

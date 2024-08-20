@@ -13,7 +13,7 @@ from omegaconf import OmegaConf
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
 import positions
 
-DUMP_PATH = 'data/localizer/extract-'
+DUMP_PATH = 'data/localizer/'
 SAVE_PATH = '../figures/visualizations/'
 
 def is_topk(a, k=1):
@@ -22,8 +22,12 @@ def is_topk(a, k=1):
 
 if __name__ == "__main__":
     cfg = OmegaConf.from_cli()
+    position_dir = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods)
 
-    with open(DUMP_PATH + cfg.model + '.pkl', 'rb') as f:
+    params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
+    params = '-'.join([str(p) for p in params])
+
+    with open(DUMP_PATH + params + '/extract.pkl', 'rb') as f:
         data = pkl.load(f)
 
     layer_names = []
@@ -60,13 +64,13 @@ if __name__ == "__main__":
     print(desc)
 
     fig, axes = plt.subplots(6, 4, figsize=(15, 15))
-    plt.suptitle(f'radius {cfg.model.split('-')[0]} | {cfg.model.split('-')[1]} per batch',
+    plt.suptitle(f'decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
         ha='center',
         fontsize=24)
 
     for i, ax in enumerate(axes.flatten()):
 
-        with open('../models/gpt2-positions-' + str(cfg.model) + '/' + layer_names[i] + '.pkl', 'rb') as f:
+        with open(f'{position_dir}/{layer_names[i]}.pkl', 'rb') as f:
             pos = pkl.load(f)
 
         coordinates = pos.coordinates.to(int)
@@ -87,7 +91,7 @@ if __name__ == "__main__":
     sm = plt.cm.ScalarMappable(cmap = sns.color_palette("light:black", as_cmap=True), norm=norm)
     sm.set_array([])
     fig.colorbar(sm, cax=cbar_ax)
-    plt.savefig(SAVE_PATH + cfg.model + '/lmask.png')
+    plt.savefig(SAVE_PATH + params + '/lmask.png')
 
-    with open(f'data/localizer/lmask-{cfg.model}.pkl', 'wb') as f:
+    with open(f'data/localizer/{params}/lmask.pkl', 'wb') as f:
         pkl.dump(language_mask, f)

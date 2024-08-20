@@ -49,9 +49,9 @@ cfg.update(OmegaConf.from_cli())
 for key in cfg:
     try:
         exec(key + '=' + str(cfg[key]))
-    except NameError:
+    except (NameError, SyntaxError) as e:
         exec(key + '="' + cfg[key] + '"')
-
+    
     # if key not in important_cfg_keys:
     #     del cfg[key]
 

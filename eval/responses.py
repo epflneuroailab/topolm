@@ -136,7 +136,14 @@ class Elli_Dataset(Dataset):
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 
-    cfg = OmegaConf.from_cli()
+    cfg_file = 'vis_gpt2.yaml'
+    for i, arg in enumerate(sys.argv):
+        if arg[:3] == 'cfg':
+            cfg_file = arg.split('=')[1]
+            sys.argv.pop(i)
+
+    cfg = OmegaConf.load(cfg_file)
+    cfg.update(OmegaConf.from_cli())
 
     params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
     params = '-'.join([str(p) for p in params])
