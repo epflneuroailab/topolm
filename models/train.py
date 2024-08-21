@@ -55,7 +55,13 @@ for key in cfg:
     # if key not in important_cfg_keys:
     #     del cfg[key]
 
-out_dir += 'run-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-' + str(alpha) + '-' + str(batch_size) + '-' + str(accum) + '-' + str(activation_decay)
+if not head_loss:
+    out_dir += 'run-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-' + str(alpha) + '-' + str(batch_size) + '-' + str(accum) + '-' + str(activation_decay)
+elif not attn_proj:
+    out_dir += 'run-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-' + str(alpha) + '-' + str(batch_size) + '-' + str(accum) + '-' + str(activation_decay) + '-headloss'
+else:
+    out_dir += 'run-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-' + str(alpha) + '-' + str(batch_size) + '-' + str(accum) + '-' + str(activation_decay) + '-headloss-proj'
+
 cfg = OmegaConf.to_container(cfg)
 
 # various inits, derived attributes, I/O setup
@@ -140,7 +146,8 @@ if os.path.exists(meta_path):
 
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embed=n_embed, block_size=block_size,
-                  bias=bias, vocab_size=None, dropout=dropout, alpha=alpha, position_dir=position_dir, accum=accum, activation_decay=activation_decay) # start with model_args from command line
+                  bias=bias, vocab_size=None, dropout=dropout, alpha=alpha, position_dir=position_dir,
+                  accum=accum, activation_decay=activation_decay, head_loss=head_loss, attn_proj=attn_proj) # start with model_args from command line
 if init_from == 'scratch':
     # init a new model from scratch
     quick_log("Initializing a new model from scratch")

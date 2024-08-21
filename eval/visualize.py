@@ -140,9 +140,7 @@ if __name__ == "__main__":
 
             with open(f'{position_dir}/{layer_names[i]}.pkl', 'rb') as f:
                 pos = pkl.load(f)
-
-            coordinates = pos.coordinates.to(int)
-
+            
             coordinates = pos.coordinates.to(int)
             gridx, gridy, smoothed_activations = smoothing(coordinates.numpy(), activations[i])
             # ax.scatter(gridy, -gridx, c=smoothed_activations, cmap='RdBu_r', s=32, marker='s')

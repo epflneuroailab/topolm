@@ -40,9 +40,13 @@ class CausalSelfAttention(nn.Module):
 
         # key, query, value projections for all heads, but in a batch
         self.c_attn = nn.Linear(config.n_embed, 3 * config.n_embed, bias=config.bias)
-        # output projection
-        self.c_proj = nn.Linear(config.n_embed, config.n_embed, bias=config.bias)
         
+        # output projection
+        if not config.head_loss:
+            self.c_proj = nn.Linear(config.n_embed, config.n_embed, bias=config.bias)
+        else:
+            self.c_proj = ReshapeAttention(config.n_head)
+
         # regularization
         self.dropout = config.dropout
         self.attn_dropout = nn.Dropout(config.dropout)
@@ -68,11 +72,23 @@ class CausalSelfAttention(nn.Module):
         y = self.resid_dropout(self.c_proj(y))
         return y
 
-class Dummy(nn.Module):
-    def __init__():
-        pass 
+class ReshapeAttention(nn.Module):
+    def __init__(self, n_head):
+        super().__init__()
+        self.n_head = n_head
 
     def forward(self, x):
+        B, T, C = x.size()
+        head_size = C // self.n_head
+        
+        n_heads_dim = int(np.sqrt(self.n_head))
+        head_size_dim = int(np.sqrt(head_size))
+
+        x = x.view(B, T, self.n_head, head_size_dim, head_size_dim) \
+                   .view(B, T, n_heads_dim, n_heads_dim, head_size_dim, head_size_dim) \
+                   .permute(0, 1, 2, 4, 3, 5) \
+                   .reshape(B, T, -1)
+
         return x
 
 class MLP(nn.Module):
@@ -95,15 +111,26 @@ class TransformerBlock(nn.Module):
 
     def __init__(self, config):
         super().__init__()
-        self.ln_1 = LayerNorm(config.n_embed, bias=config.bias)
+        self.attn_proj = config.attn_proj
+        self.n_embed = config.n_embed
+        self.bias = config.bias
+
+        self.ln_1 = LayerNorm(self.n_embed, bias=config.bias)
         self.attn = CausalSelfAttention(config)
-        self.ln_2 = LayerNorm(config.n_embed, bias=config.bias)
+        self.ln_2 = LayerNorm(self.n_embed, bias=config.bias)
         self.mlp = MLP(config)
 
+        if config.attn_proj:
+            self.attn_proj = nn.Linear(self.n_embed, self.n_embed, bias=self.bias)
+        else:
+            self.attn_proj = nn.Identity(self.n_embed, self.n_embed)
+
     def forward(self, x):
-        attn_out = x + self.attn(self.ln_1(x))
-        mlp_out = attn_out + self.mlp(self.ln_2(attn_out))
-        return attn_out, mlp_out 
+        attn_out = self.attn(self.ln_1(x))
+        x = x + self.attn_proj(attn_out)
+        mlp_out = self.mlp(self.ln_2(x))
+        x = x + mlp_out
+        return x, attn_out, mlp_out 
 
 @dataclass
 class GPTConfig:
@@ -118,6 +145,8 @@ class GPTConfig:
     alpha: float = 0.25
     accum: str = 'mean'
     activation_decay: float = 0.0
+    head_loss: bool = False
+    attn_proj: bool = False
 
 class GPT(nn.Module):
 
@@ -191,13 +220,11 @@ class GPT(nn.Module):
         x = self.transformer.drop(tok_emb + pos_emb)
 
         for i, block in enumerate(self.transformer.h):
-            attn_out, mlp_out = block(x)
+            x, attn_out, mlp_out = block(x)
             out_shape = attn_out.shape
 
             spatial_outputs[f'layer.{i}.attn'] = (attn_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.attn'].to(device))
             spatial_outputs[f'layer.{i}.mlp'] = (mlp_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.mlp'].to(device))
-
-            x = mlp_out
 
         x = self.transformer.ln_f(x)
 

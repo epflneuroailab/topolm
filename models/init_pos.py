@@ -57,7 +57,10 @@ X, Y = get_batch()
 
 ### INTIALIZE MODEL ###
 
-position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch)
+if swapopt:
+    position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch)
+else:
+    position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-noswap'
 
 layer_names = []
 for i in range(n_layer):
@@ -87,58 +90,60 @@ for name in layer_names:
 
     pos.save(position_dir)
 
-print('Initialized all layer positions and neighborhoods...')
+if swapopt:
 
-model_args = dict(
-                    n_layer=n_layer,
-                    n_head=n_head,
-                    n_embed=n_embed,
-                    block_size=block_size,
-                    bias=bias,
-                    vocab_size=vocab_size,
-                    dropout=dropout,
-                    position_dir=position_dir
-                )
+    print('Initialized all layer positions and neighborhoods...')
 
-gptconf = GPTConfig(**model_args)
-model = GPT(gptconf)
+    model_args = dict(
+                        n_layer=n_layer,
+                        n_head=n_head,
+                        n_embed=n_embed,
+                        block_size=block_size,
+                        bias=bias,
+                        vocab_size=vocab_size,
+                        dropout=dropout,
+                        position_dir=position_dir
+                    )
 
-print('Loaded model...')
+    gptconf = GPTConfig(**model_args)
+    model = GPT(gptconf)
 
-### INIT POSITIONS ###
+    print('Loaded model...')
 
-model.eval()
-activations = {}
+    ### INIT POSITIONS ###
 
-with torch.no_grad():
-    logits, loss, task_loss, spatial_loss, spatial_outputs = model(X, Y)
+    model.eval()
+    activations = {}
 
-for name in layer_names:
-    activations[name] = spatial_outputs[name][0]
+    with torch.no_grad():
+        logits, loss, task_loss, spatial_loss, spatial_outputs = model(X, Y)
 
-network_positions = NetworkPositions.load_from_dir(position_dir)
+    for name in layer_names:
+        activations[name] = spatial_outputs[name][0]
 
-def print_layer(name):
-    layer_line = f' LAYER {name} '
-    padding = (terminal_width - len(layer_line)) // 2
-    print(f'{"=" * padding}{layer_line}{"=" * padding}')
+    network_positions = NetworkPositions.load_from_dir(position_dir)
 
-print('Preoptimizing...')
+    def print_layer(name):
+        layer_line = f' LAYER {name} '
+        padding = (terminal_width - len(layer_line)) // 2
+        print(f'{"=" * padding}{layer_line}{"=" * padding}')
 
-for name in layer_names:
+    print('Preoptimizing...')
 
-    print_layer(name)
+    for name in layer_names:
 
-    layer_positions = network_positions.layer_positions[name].to(device)
-    activations[name] = activations[name].to(device)
+        print_layer(name)
 
-    old_loss = spatial_loss_fn(activations[name], layer_positions)
+        layer_positions = network_positions.layer_positions[name].to(device)
+        activations[name] = activations[name].to(device)
 
-    layer_positions, n_swapped = swap_optimize(activations[name], layer_positions, num_neighborhoods, local_steps, radius, p, rng)
+        old_loss = spatial_loss_fn(activations[name], layer_positions)
 
-    new_loss = spatial_loss_fn(activations[name], layer_positions)
+        layer_positions, n_swapped = swap_optimize(activations[name], layer_positions, num_neighborhoods, local_steps, radius, p, rng)
 
-    print(f'global loss decreased by {(old_loss - new_loss):.3f} | swapped {n_swapped}/{local_steps * num_neighborhoods} possible pairs')
-    
-    layer_positions = layer_positions.to('cpu')
-    layer_positions.save(position_dir)
+        new_loss = spatial_loss_fn(activations[name], layer_positions)
+
+        print(f'global loss decreased by {(old_loss - new_loss):.3f} | swapped {n_swapped}/{local_steps * num_neighborhoods} possible pairs')
+        
+        layer_positions = layer_positions.to('cpu')
+        layer_positions.save(position_dir)

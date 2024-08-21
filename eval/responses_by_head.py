@@ -18,9 +18,10 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
-from model import GPT, GPTConfig, CausalSelfAttention
+from model import GPT, GPTConfig, Dummy
 
 MODEL_DIR = '../models/out/'
+SAVE_PATH = 'data/responses-by-head/'
 
 FEDORENKO = 'stimuli/fedorenko_stimuli.csv'
 MOSELEY= 'stimuli/moseley_stimuli.csv'
@@ -135,7 +136,14 @@ class Elli_Dataset(Dataset):
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 
-    cfg = OmegaConf.from_cli()
+    cfg_file = 'vis_gpt2.yaml'
+    for i, arg in enumerate(sys.argv):
+        if arg[:3] == 'cfg':
+            cfg_file = arg.split('=')[1]
+            sys.argv.pop(i)
+
+    cfg = OmegaConf.load(cfg_file)
+    cfg.update(OmegaConf.from_cli())
 
     params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
     params = '-'.join([str(p) for p in params])
@@ -155,22 +163,21 @@ if __name__ == "__main__":
         if k.startswith(unwanted_prefix):
             state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
 
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict, strict = False)
     model.eval()
 
-    layer_names = []
-    for i in range(12):
-        layer_names += [f'layer.{i}.attn', f'layer.{i}.mlp']
+    layer_names = [f'layer.{i}.id_head' for i in range(12)]
 
-    activations = []
+    temp_activations = []
 
     def attention_hook(module, input, output):
         # output is the tensor before the output projection (self.c_proj(y))
-        activations.append(output.detach().cpu().numpy())
+        print(output.shape)
+        temp_activations.append(output.mean(axis = 2).detach().cpu())
 
     def register_hooks(model):
         for name, module in model.named_modules():
-            if isinstance(module, CausalSelfAttention):
+            if isinstance(module, Dummy):
                 module.register_forward_hook(attention_hook)
 
     tokenizer = tiktoken.get_encoding('gpt2')
@@ -189,6 +196,7 @@ if __name__ == "__main__":
 
     register_hooks(model)
 
+    activations = defaultdict(list)
     for batch_idx, batch_data in tqdm(enumerate(dataloader), total=len(dataloader)):
         sents, input_type = batch_data
 
@@ -201,6 +209,71 @@ if __name__ == "__main__":
         Y[:, -1] = pad_token
 
         _, _, _, _, spatial_outputs = model(torch.from_numpy(X), torch.from_numpy(Y))
+        batch_size, batch_len = X.shape
 
-    print(activations[0].shape)
+        for i, layer in enumerate(layer_names):
+            for j in range(batch_size):
+                activations[layer].append((temp_activations[i][j], input_type[j]))
+
+        temp_activations = []
+    
+    final_responses = defaultdict(list)
+    for i in range(len(activations[layer_names[0]])):
+
+        condition = activations[layer_names[0]][i][1] # dataset.all_conditions[i // dataset.num_samples]
+
+        # activations[layer][i] is (n_embed,) so tot_activations is (n_layers, n_embed)
+        tot_activations = np.array([activations[layer][i][0] for layer in activations])
+        final_responses[condition].append(tot_activations)
+
+    for condition in final_responses:
+        # (num_samples, num_layers, n_heads, n_embed // n_heads)
+        final_responses[condition] = np.stack(final_responses[condition], axis = 0)
+
+    savedir = SAVE_PATH + params
+    os.makedirs(savedir, exist_ok = True)
+    
+    with open(os.path.expanduser(savedir + '/' + cfg.stimulus + '.pkl'), 'wb') as f:
+        pkl.dump(final_responses, f)
+
+    # activations = defaultdict(list)
+    # for batch_idx, batch_data in tqdm(enumerate(dataloader), total=len(dataloader)):
+    #     sents, input_type = batch_data
+
+    #     tokens = tokenizer.encode_batch(sents, allowed_special = 'all')
+    #     padded = list(zip(*itertools.zip_longest(*tokens, fillvalue=pad_token)))
+
+    #     X = np.array(padded)
+    #     Y = np.zeros_like(X)
+    #     Y[:, :-1] = X[:, 1:]
+    #     Y[:, -1] = pad_token
+
+    #     _, _, _, _, spatial_outputs = model(torch.from_numpy(X), torch.from_numpy(Y))
+    #     batch_size, batch_len = X.shape
+
+    #     for layer in layer_names:
+
+    #         reshaped = spatial_outputs[layer][0].view(batch_size, batch_len, -1).mean(axis=1).detach().cpu()
+
+    #         for i in range(batch_size):
+    #             activations[layer].append((reshaped[i], input_type[i]))
+
+    # final_responses = defaultdict(list)
+    # for i in range(len(activations[layer_names[0]])):
+
+    #     condition = activations[layer_names[0]][i][1] # dataset.all_conditions[i // dataset.num_samples]
+
+    #     # activations[layer][i] is (n_embed,) so tot_activations is (n_layers, n_embed)
+    #     tot_activations = np.array([activations[layer][i][0] for layer in activations])
+    #     final_responses[condition].append(tot_activations)
+
+    # for condition in final_responses:
+    #     # (num_samples, num_layers, n_embed)
+    #     final_responses[condition] = np.stack(final_responses[condition], axis = 0)
+
+    # savedir = SAVE_PATH + params
+    # os.makedirs(savedir, exist_ok = True)
+    
+    # with open(os.path.expanduser(savedir + '/' + cfg.stimulus + '.pkl'), 'wb') as f:
+    #     pkl.dump(final_responses, f)
 

@@ -35,6 +35,8 @@ bias: False # do we use bias inside LayerNorm and Linear layers?
 alpha: 1.0
 accum: 'mean'
 activation_decay: 0
+head_loss: False
+attn_proj: False
 
 # wandb logging
 wandb_log: True # disabled by default

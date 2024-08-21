@@ -1,3 +1,5 @@
+swapopt: True
+
 local_steps: 50
 neighborhoods_per_batch: 5
 
@@ -10,5 +12,5 @@ bias: False
 vocab_size: 50304
 dropout: 0.0
 
-radius: 10
+radius: 5
 p: 'inf'
