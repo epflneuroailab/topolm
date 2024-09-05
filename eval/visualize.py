@@ -19,7 +19,8 @@ import positions
 """ visualize topoformer activations and selectivity for a specific stimulus set """
 
 DATA_PATH = 'data/responses/'
-SAVE_PATH = '../figures/visualizations/'
+SAVE_PATH = 'data/contrasts/'
+FIG_PATH = '../figures/visualizations/'
 
 def clip_by_sd(arr, alpha = 2):
     mean = 0
@@ -41,9 +42,9 @@ if __name__ == "__main__":
     cfg = OmegaConf.load(cfg_file)
     cfg.update(OmegaConf.from_cli())
 
-    position_dir = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods)
+    position_dir = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods) + '-noswap'
 
-    fwhm_mm = 2.5
+    fwhm_mm = 2.0
     resolution_mm = 1
     smoothing = NeuronSmoothing(fwhm_mm=fwhm_mm, resolution_mm=resolution_mm)
 
@@ -51,11 +52,12 @@ if __name__ == "__main__":
 
     params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
     params = '-'.join([str(p) for p in params])
+    params += '-new'
 
     with open(DATA_PATH + params + '/' + cfg.stimulus + '.pkl', 'rb') as f:
         data = pkl.load(f)
 
-    os.makedirs(SAVE_PATH + params + '/' + cfg.stimulus, exist_ok = True)
+    os.makedirs(FIG_PATH + params + '/' + cfg.stimulus, exist_ok = True)
 
     num_units = 784
     layer_names = []
@@ -161,7 +163,7 @@ if __name__ == "__main__":
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
 
-        plt.savefig(SAVE_PATH + params + '/'  + cfg.stimulus + '/' + condition + '.png')
+        plt.savefig(FIG_PATH + params + '/' + cfg.stimulus + '/' + condition + '.png')
 
     ### CONTRAST PLOTS ###
     print('Plotting all contrasts...')
@@ -222,4 +224,8 @@ if __name__ == "__main__":
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
         
-        plt.savefig(SAVE_PATH + params + '/'  + cfg.stimulus + '/' + condition + '_contrast.png')
+        plt.savefig(FIG_PATH + params + '/' + cfg.stimulus + '/' + condition + '_contrast.png')
+
+        os.makedirs(os.path.join(SAVE_PATH, params, f'{cfg.stimulus}-{condition}'), exist_ok = True)
+        with open(os.path.join(SAVE_PATH, params, f'{cfg.stimulus}-{condition}.pkl'), 'wb') as f:
+            pkl.dump(selectivity, f)

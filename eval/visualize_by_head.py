@@ -18,8 +18,9 @@ import positions
 
 """ visualize topoformer activations and selectivity for a specific stimulus set """
 
-DATA_PATH = 'data/responses-by-head/'
-SAVE_PATH = '../figures/by-head/'
+DATA_PATH = 'data/responses/'
+SAVE_PATH = 'data/contrasts/'
+FIG_PATH = '../figures/by-head/'
 
 def clip_by_sd(arr, alpha = 2):
     mean = 0
@@ -51,14 +52,17 @@ if __name__ == "__main__":
 
     params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
     params = '-'.join([str(p) for p in params])
+    params += '-headloss-proj'
 
     with open(DATA_PATH + params + '/' + cfg.stimulus + '.pkl', 'rb') as f:
         data = pkl.load(f)
 
-    os.makedirs(SAVE_PATH + params + '/' + cfg.stimulus, exist_ok = True)
+    os.makedirs(FIG_PATH + params + '/' + cfg.stimulus, exist_ok = True)
 
     num_units = 784
-    layer_names = [f'layer.{i}.id_head' for i in range(12)]
+    layer_names = []
+    for i in range(12):
+        layer_names += [f'layer.{i}.attn', f'layer.{i}.mlp']
 
     if cfg.stimulus == 'fedorenko':
         all_conditions = sorted(['J', 'N', 'S', 'W'])
@@ -126,33 +130,36 @@ if __name__ == "__main__":
     ### PLOTS FOR ALL CONDITIONS ###
     print('Plotting all conditions...')
     for condition in all_conditions:
-        # data[condition] is (n_samples, n_layers, n_heads, n_embed/n_heads)
-        # activations is (n_layers, n_heads, n_embed/n_heads)
+        # (n_layers, n_embed)
         activations = data[condition].mean(axis = 0)
 
-        fig, axes = plt.subplots(12, 16, figsize=(20, 30))
+        fig, axes = plt.subplots(6, 4, figsize=(15, 20))
         plt.suptitle(f'{cfg.stimulus} | {condition} | decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
             ha='center',
             fontsize=24)
 
         for i, ax in enumerate(axes.flatten()):
-            cur_layer = i // 16
-            cur_head = i % 12
 
-            # with open(f'{position_dir}/layer.{cur_layer}.attn.pkl', 'rb') as f:
-            #     pos = pkl.load(f)
-
-            # coordinates = (pos.coordinates.to(int)[(cur_head * 49):((cur_head * 49) + 49)]) % 49
-            coordinates = np.array([[i, j] for i in range(7) for j in range(7)])
-
-            gridx, gridy, smoothed_activations = smoothing(coordinates, activations[cur_layer][cur_head])
+            with open(f'{position_dir}/{layer_names[i]}.pkl', 'rb') as f:
+                pos = pkl.load(f)
+            
+            coordinates = pos.coordinates.to(int)
+            gridx, gridy, smoothed_activations = smoothing(coordinates.numpy(), activations[i])
             # ax.scatter(gridy, -gridx, c=smoothed_activations, cmap='RdBu_r', s=32, marker='s')
 
-            grid = np.full((7, 7), np.nan)
+            grid = np.full((28, 28), np.nan)
             grid[gridx.astype(int).squeeze(), gridy.astype(int).squeeze()] = smoothed_activations
             sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
 
-            ax.set_title(f'{layer_names[cur_layer]}.{cur_head}')
+            headlines = np.arange(7, 49, 7)
+
+            for pos in headlines:
+                ax.vlines(pos, 0, 49, colors='black', linewidth=2)
+
+            for pos in headlines:
+                ax.hlines(pos, 0, 49, colors='black', linewidth=2)
+
+            ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
 
         plt.tight_layout(rect=[0, 0, 0.9, 0.98])
@@ -164,65 +171,77 @@ if __name__ == "__main__":
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
 
-        plt.savefig(SAVE_PATH + params + '/'  + cfg.stimulus + '/' + condition + '.png')
+        plt.savefig(FIG_PATH + params + '/' + cfg.stimulus + '/' + condition + '.png')
 
     ### CONTRAST PLOTS ###
-    # print('Plotting all contrasts...')
-    # for condition in contrasts:
+    print('Plotting all contrasts...')
+    for condition in contrasts:
 
-    #     p_values_matrix = np.zeros((len(layer_names), num_units))
-    #     t_values_matrix = np.zeros((len(layer_names), num_units))
-    #     grids = dict()
+        p_values_matrix = np.zeros((len(layer_names), num_units))
+        t_values_matrix = np.zeros((len(layer_names), num_units))
+        grids = dict()
 
-    #     for layer_idx, layer_name in enumerate(layer_names):
+        for layer_idx, layer_name in enumerate(layer_names):
 
-    #         with open(f'{position_dir}/{layer_name}.pkl', 'rb') as f:
-    #             pos = pkl.load(f)
+            with open(f'{position_dir}/{layer_name}.pkl', 'rb') as f:
+                pos = pkl.load(f)
 
-    #         coordinates = pos.coordinates.to(int)
+            coordinates = pos.coordinates.to(int)
         
-    #         # (num_samples, n_embed)
-    #         activations = [contrasts[condition][0][:, layer_idx, :], contrasts[condition][1][:, layer_idx, :]]
+            # (num_samples, n_embed)
+            activations = [contrasts[condition][0][:, layer_idx, :], contrasts[condition][1][:, layer_idx, :]]
 
-    #         for i, act in enumerate(activations):
-    #             gridx, gridy, activations[i] = smoothing(coordinates.numpy(), act)
+            for i, act in enumerate(activations):
+                gridx, gridy, activations[i] = smoothing(coordinates.numpy(), act)
             
-    #         grids[layer_idx] = (gridx, gridy)
+            grids[layer_idx] = (gridx, gridy)
 
-    #         t_values_matrix[layer_idx], p_values_matrix[layer_idx] = scipy.stats.ttest_ind(activations[0], activations[1], axis=0, equal_var=False)
+            t_values_matrix[layer_idx], p_values_matrix[layer_idx] = scipy.stats.ttest_ind(activations[0], activations[1], axis=0, equal_var=False)
 
-    #     adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
-    #     adjusted_p_values = adjusted_p_values.reshape((len(layer_names), activations[0].shape[1]))
-    #     selectivity = t_values_matrix * (adjusted_p_values < 0.05)
+        adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
+        adjusted_p_values = adjusted_p_values.reshape((len(layer_names), activations[0].shape[1]))
+        selectivity = t_values_matrix * (adjusted_p_values < 0.05)
 
-    #     fig, axes = plt.subplots(6, 4, figsize=(15, 20))
-    #     plt.suptitle(f'{cfg.stimulus} | {condition} | decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
-    #         ha='center',
-    #         fontsize=24)
+        fig, axes = plt.subplots(6, 4, figsize=(15, 20))
+        plt.suptitle(f'{cfg.stimulus} | {condition} | decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
+            ha='center',
+            fontsize=24)
 
-    #     for i, ax in enumerate(axes.flatten()):
+        for i, ax in enumerate(axes.flatten()):
 
-    #         # grid = np.full((28, 28), np.nan)
-    #         # grid[coordinates[:, 0], coordinates[:, 1]] = selectivity[i]
+            # grid = np.full((28, 28), np.nan)
+            # grid[coordinates[:, 0], coordinates[:, 1]] = selectivity[i]
 
-    #         gridx, gridy = grids[i]
+            gridx, gridy = grids[i]
 
-    #         grid = np.full((28, 28), np.nan)
-    #         grid[gridx.astype(int).squeeze(), gridy.astype(int).squeeze()] = selectivity[i]
-    #         sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
+            grid = np.full((28, 28), np.nan)
+            grid[gridx.astype(int).squeeze(), gridy.astype(int).squeeze()] = selectivity[i]
+            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
+            
+            headlines = np.arange(7, 49, 7)
 
-    #         # sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
-    #         ax.set_title(f'{layer_names[i]}')
-    #         ax.axis('off')
+            for pos in headlines:
+                ax.vlines(pos, 0, 49, colors='black', linewidth=2)
 
-    #     plt.tight_layout(rect=[0, 0, 0.9, 0.98])
+            for pos in headlines:
+                ax.hlines(pos, 0, 49, colors='black', linewidth=2)
 
-    #     cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
-    #     bound = max(abs(np.min(smoothed_activations)), abs(np.max(smoothed_activations)))
-    #     norm = colors.TwoSlopeNorm(vmin=-bound, vcenter = 0, vmax=bound)
+            # sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
+            ax.set_title(f'{layer_names[i]}')
+            ax.axis('off')
 
-    #     sm = plt.cm.ScalarMappable(cmap = 'RdBu_r', norm=norm)
-    #     sm.set_array([])
-    #     fig.colorbar(sm, cax=cbar_ax)
+        plt.tight_layout(rect=[0, 0, 0.9, 0.98])
+
+        cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
+        bound = max(abs(np.min(smoothed_activations)), abs(np.max(smoothed_activations)))
+        norm = colors.TwoSlopeNorm(vmin=-bound, vcenter = 0, vmax=bound)
+
+        sm = plt.cm.ScalarMappable(cmap = 'RdBu_r', norm=norm)
+        sm.set_array([])
+        fig.colorbar(sm, cax=cbar_ax)
         
-    #     plt.savefig(SAVE_PATH + params + '/'  + cfg.stimulus + '/' + condition + '_contrast.png')
+        plt.savefig(FIG_PATH + params + '/' + cfg.stimulus + '/' + condition + '_contrast.png')
+
+        os.makedirs(os.path.join(SAVE_PATH, params, f'{cfg.stimulus}-{condition}'), exist_ok = True)
+        with open(os.path.join(SAVE_PATH, params, f'{cfg.stimulus}-{condition}.pkl'), 'wb') as f:
+            pkl.dump(selectivity, f)

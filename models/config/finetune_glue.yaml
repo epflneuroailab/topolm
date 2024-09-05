@@ -1,0 +1,64 @@
+# config for training GPT-2 (124M) down to very nice loss of ~2.85 on 1 node of 8X A100 40GB
+# launch as the following (e.g. in a screen session) and wait ~5 days:
+# $ torchrun --standalone --nproc_per_node=8 train.py config/train_gpt2.py
+
+# I/O
+ckpt: "'out/'"
+always_save_checkpoint: True # if True, always save a checkpoint after each eval
+init_from: 'scratch' # 'scratch' or 'resume' or 'gpt2*'
+
+# eval / logging stuff
+eval_interval: 250
+eval_iters: 200
+save_interval: 500
+log_interval: 50
+eval_only: False # if True, script exits right after the first eval
+
+# data
+position_dir: 'gpt2-positions-5-5'
+task: 'mnli'
+
+# these make the total batch size be ~1M
+# 48 batch size * 1024 block size * 5 gradaccum * 4 GPUs: 491,520
+batch_size: 48
+block_size: 1024
+gradient_accumulation_steps: 5 * 4
+
+# model
+n_layer: 12
+n_head: 16
+n_embed: 784
+dropout: 0.0 # for pretraining 0 is good, for finetuning try 0.1+
+bias: False # do we use bias inside LayerNorm and Linear layers?
+alpha: 2.5
+accum: 'mean'
+activation_decay: 0
+head_loss: False
+attn_proj: False
+
+# wandb logging
+wandb_log: True # disabled by default
+wandb_project: 'topo-glue'
+wandb_run_name: "task"
+
+# adamw optimizer
+learning_rate: 6e-4 # max learning rate
+max_iters: 600000 # total number of training iterations
+weight_decay: 1e-1
+beta1: 0.9
+beta2: 0.95
+grad_clip: 1.0 # clip gradients at this value, or disable if:= 0.0
+
+# learning rate decay settings
+decay_lr: True # whether to decay the learning rate
+warmup_iters: 2000 # how many steps to warm up for
+lr_decay_iters: 600000 # should be ~= max_iters per Chinchilla
+min_lr: 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
+
+# DDP settings
+backend: 'nccl' # 'nccl', 'gloo', etc.
+
+# system
+device: 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
+dtype: "'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16'" # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
+compile: False # use PyTorch 2.0 to compile the model to be faster

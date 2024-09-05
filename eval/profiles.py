@@ -9,9 +9,9 @@ import pickle as pkl
 import scipy
 from collections import defaultdict
 
-DUMP_PATH = 'data/responses/fedorenko.pkl'
-MASK_FILE = 'data/lmask.pkl'
-SAVE_PATH = 'data/responses/fedorenko-profiles.csv'
+DUMP_PATH = 'data/responses/5-5-2.5-48-mean-0/fedorenko.pkl'
+MASK_FILE = 'data/localizer/5-5-2.5-48-mean-0/lmask.pkl'
+SAVE_PATH = 'data/responses/5-5-2.5-48-mean-0/fedorenko-profiles.csv'
 
 if __name__ == "__main__":
 

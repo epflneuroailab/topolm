@@ -15,7 +15,7 @@ log_interval: 50
 eval_only: False # if True, script exits right after the first eval
 
 # data
-radius: 10
+radius: 5
 neighborhoods_per_batch: 5
 position_dir: "'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch)"
 dataset: 'fineweb'
@@ -32,7 +32,7 @@ n_head: 16
 n_embed: 784
 dropout: 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias: False # do we use bias inside LayerNorm and Linear layers?
-alpha: 1.0
+alpha: 2.5
 accum: 'mean'
 activation_decay: 0
 head_loss: False

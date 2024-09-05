@@ -127,10 +127,9 @@ class TransformerBlock(nn.Module):
 
     def forward(self, x):
         attn_out = self.attn(self.ln_1(x))
-        x = x + self.attn_proj(attn_out)
-        mlp_out = self.mlp(self.ln_2(x))
-        x = x + mlp_out
-        return x, attn_out, mlp_out 
+        attn_out = x + self.attn_proj(attn_out)
+        mlp_out = attn_out + self.mlp(self.ln_2(attn_out))
+        return attn_out, mlp_out 
 
 @dataclass
 class GPTConfig:
@@ -220,11 +219,13 @@ class GPT(nn.Module):
         x = self.transformer.drop(tok_emb + pos_emb)
 
         for i, block in enumerate(self.transformer.h):
-            x, attn_out, mlp_out = block(x)
+            attn_out, mlp_out = block(x)
             out_shape = attn_out.shape
 
             spatial_outputs[f'layer.{i}.attn'] = (attn_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.attn'].to(device))
             spatial_outputs[f'layer.{i}.mlp'] = (mlp_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.mlp'].to(device))
+
+            x = mlp_out
 
         x = self.transformer.ln_f(x)
 

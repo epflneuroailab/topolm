@@ -3,4 +3,4 @@ neighborhoods: 5
 alpha: 2.5
 accum: mean
 decay: 0
-batch_size: 24
+batch_size: 48
