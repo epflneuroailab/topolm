@@ -55,7 +55,7 @@ class CausalSelfAttention(nn.Module):
         self.n_head = config.n_head
         self.n_embed = config.n_embed
 
-    def forward(self, x):
+    def forward(self, x, attn_mask = None):
         B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embed)
 
         # calculate query, key, values for all heads in batch and move head forward to be the batch dim
@@ -65,7 +65,15 @@ class CausalSelfAttention(nn.Module):
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
 
         # flash attention
-        y = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=self.dropout if self.training else 0, is_causal=True)
+        if attn_mask is not None:
+
+            attn_mask = attn_mask.unsqueeze(1).unsqueeze(2)  # (B, 1, 1, T)
+            attn_mask = attn_mask.expand(-1, self.n_head, -1, -1)  # (B, nh, T, T)
+            y = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=attn_mask, dropout_p=self.dropout if self.training else 0, is_causal=False)
+
+        else:
+            y = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=self.dropout if self.training else 0, is_causal=True)
+
         y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
 
         # output projection
@@ -114,6 +122,7 @@ class TransformerBlock(nn.Module):
         self.attn_proj = config.attn_proj
         self.n_embed = config.n_embed
         self.bias = config.bias
+        self.with_resid = config.with_resid
 
         self.ln_1 = LayerNorm(self.n_embed, bias=config.bias)
         self.attn = CausalSelfAttention(config)
@@ -125,11 +134,24 @@ class TransformerBlock(nn.Module):
         else:
             self.attn_proj = nn.Identity(self.n_embed, self.n_embed)
 
-    def forward(self, x):
-        attn_out = self.attn(self.ln_1(x))
-        attn_out = x + self.attn_proj(attn_out)
-        mlp_out = attn_out + self.mlp(self.ln_2(attn_out))
-        return attn_out, mlp_out 
+    def forward(self, x, attn_mask=None):
+
+        if self.with_resid:
+
+            attn_out = self.attn(self.ln_1(x), attn_mask)
+            attn_out = x + self.attn_proj(attn_out)
+            mlp_out = attn_out + self.mlp(self.ln_2(attn_out))
+
+            return mlp_out, attn_out, mlp_out 
+
+        else:
+
+            attn_out = self.attn_proj(self.attn(self.ln_1(x), attn_mask))
+            x = x + attn_out
+            mlp_out = self.mlp(self.ln_2(x))
+            x = x + mlp_out
+
+            return x, attn_out, mlp_out
 
 @dataclass
 class GPTConfig:
@@ -146,6 +168,8 @@ class GPTConfig:
     activation_decay: float = 0.0
     head_loss: bool = False
     attn_proj: bool = False
+    finetune: bool = False
+    with_resid: bool = True
 
 class GPT(nn.Module):
 
@@ -205,7 +229,7 @@ class GPT(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, idx, targets=None):
+    def forward(self, idx, targets=None, attn_mask=None):
         device = idx.device
         b, t = idx.size()
         assert t <= self.config.block_size, f"Cannot forward sequence of length {t}, block size is only {self.config.block_size}"
@@ -219,20 +243,24 @@ class GPT(nn.Module):
         x = self.transformer.drop(tok_emb + pos_emb)
 
         for i, block in enumerate(self.transformer.h):
-            attn_out, mlp_out = block(x)
+            x, attn_out, mlp_out = block(x, attn_mask)
             out_shape = attn_out.shape
 
             spatial_outputs[f'layer.{i}.attn'] = (attn_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.attn'].to(device))
             spatial_outputs[f'layer.{i}.mlp'] = (mlp_out.view(out_shape[0] * out_shape[1], out_shape[2]), self.positions[f'layer.{i}.mlp'].to(device))
-
-            x = mlp_out
 
         x = self.transformer.ln_f(x)
 
         if targets is not None:
             # if we are given some desired targets also calculate the loss
             logits = self.lm_head(x)
-            task_loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
+
+            
+            # eventually need to put this in an "if finetune" condition
+            if self.config.finetune:
+                task_loss = F.cross_entropy(logits[:, -1, :], targets.view(-1), ignore_index=-1)
+            else:
+                task_loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
 
             spatial_loss = 0
             reg_loss = 0

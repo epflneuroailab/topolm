@@ -42,7 +42,7 @@ if __name__ == "__main__":
     cfg = OmegaConf.load(cfg_file)
     cfg.update(OmegaConf.from_cli())
 
-    position_dir = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods) + '-noswap'
+    position_dir = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods)
 
     fwhm_mm = 2.0
     resolution_mm = 1
@@ -52,7 +52,6 @@ if __name__ == "__main__":
 
     params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
     params = '-'.join([str(p) for p in params])
-    params += '-new'
 
     with open(DATA_PATH + params + '/' + cfg.stimulus + '.pkl', 'rb') as f:
         data = pkl.load(f)
@@ -169,8 +168,12 @@ if __name__ == "__main__":
     print('Plotting all contrasts...')
     for condition in contrasts:
 
+        num_samples = contrasts[condition][0][:, 0, :].shape[0]
+
+        raw_matrix      = [np.zeros((len(layer_names), num_samples, num_units)) for _ in range(2)]
         p_values_matrix = np.zeros((len(layer_names), num_units))
         t_values_matrix = np.zeros((len(layer_names), num_units))
+
         grids = dict()
 
         for layer_idx, layer_name in enumerate(layer_names):
@@ -189,6 +192,8 @@ if __name__ == "__main__":
             grids[layer_idx] = (gridx, gridy)
 
             t_values_matrix[layer_idx], p_values_matrix[layer_idx] = scipy.stats.ttest_ind(activations[0], activations[1], axis=0, equal_var=False)
+            raw_matrix[0][layer_idx] = activations[0]
+            raw_matrix[1][layer_idx] = activations[1]
 
         adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
         adjusted_p_values = adjusted_p_values.reshape((len(layer_names), activations[0].shape[1]))
@@ -226,6 +231,11 @@ if __name__ == "__main__":
         
         plt.savefig(FIG_PATH + params + '/' + cfg.stimulus + '/' + condition + '_contrast.png')
 
-        os.makedirs(os.path.join(SAVE_PATH, params, f'{cfg.stimulus}-{condition}'), exist_ok = True)
-        with open(os.path.join(SAVE_PATH, params, f'{cfg.stimulus}-{condition}.pkl'), 'wb') as f:
-            pkl.dump(selectivity, f)
+        os.makedirs(os.path.join(SAVE_PATH, params, cfg.stimulus), exist_ok = True)
+        with open(os.path.join(SAVE_PATH, params, cfg.stimulus, f'{condition}.pkl'), 'wb') as f:
+            pkl.dump({
+                'raw'         : raw_matrix,
+                'selectivity' : selectivity,
+                't_values'    : t_values_matrix,
+                'p_values'    : adjusted_p_values
+                }, f)

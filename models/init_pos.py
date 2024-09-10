@@ -60,7 +60,7 @@ X, Y = get_batch()
 if swapopt:
     position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch)
 else:
-    position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-noswap'
+    position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-random'
 
 layer_names = []
 for i in range(n_layer):
@@ -79,6 +79,8 @@ for name in layer_names:
         coordinates = torch.Tensor(list(product(np.arange(28), repeat = 2))),
         neighborhood_indices = torch.zeros(size=(num_neighborhoods, n_embed), dtype=int),
         neighborhoods_per_batch = neighborhoods_per_batch)
+
+    pos.coordinates = pos.coordinates[torch.randperm(28 * 28)]
 
     mask = (pos.coordinates[:, 0] >= radius - 1) & (pos.coordinates[:, 0] <= N - radius) & \
            (pos.coordinates[:, 1] >= radius - 1) & (pos.coordinates[:, 1] <= N - radius)

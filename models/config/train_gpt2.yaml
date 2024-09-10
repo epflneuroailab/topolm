@@ -37,6 +37,7 @@ accum: 'mean'
 activation_decay: 0
 head_loss: False
 attn_proj: False
+with_resid: True
 
 # wandb logging
 wandb_log: True # disabled by default

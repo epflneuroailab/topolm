@@ -147,7 +147,9 @@ if os.path.exists(meta_path):
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embed=n_embed, block_size=block_size,
                   bias=bias, vocab_size=None, dropout=dropout, alpha=alpha, position_dir=position_dir,
-                  accum=accum, activation_decay=activation_decay, head_loss=head_loss, attn_proj=attn_proj) # start with model_args from command line
+                  accum=accum, activation_decay=activation_decay, head_loss=head_loss, attn_proj=attn_proj,
+                  finetune=False, with_resid=with_resid) # start with model_args from command line
+
 if init_from == 'scratch':
     # init a new model from scratch
     quick_log("Initializing a new model from scratch")
@@ -181,6 +183,9 @@ elif init_from == 'resume':
     # the rest of the attributes (e.g. dropout) can stay as desired from command line
     for k in ['n_layer', 'n_head', 'n_embed', 'block_size', 'bias', 'vocab_size']:
         model_args[k] = checkpoint_model_args[k]
+
+    model_args['finetune'] = False
+    
     # create the model
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
