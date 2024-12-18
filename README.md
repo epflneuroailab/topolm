@@ -1,4 +1,4 @@
-# topo-eval
+# topolm
 Code for training and evaluating TDANN language models. See the [TopoLM paper](https://arxiv.org/abs/2410.11516).
 
 ## directory
