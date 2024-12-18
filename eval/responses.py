@@ -145,12 +145,14 @@ if __name__ == "__main__":
     cfg = OmegaConf.load(cfg_file)
     cfg.update(OmegaConf.from_cli())
 
-    params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
-    params = '-'.join([str(p) for p in params])
+    # params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
+    # params = '-'.join([str(p) for p in params])
+    name = cfg.name
 
-    checkpoint = torch.load(MODEL_DIR + 'ckpt-' + params + '.pt', map_location=device)
+    checkpoint = torch.load(MODEL_DIR + name + '.pt', map_location=device)
     model_args = checkpoint['model_args']
-    model_args['position_dir'] = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods)
+    model_args['position_dir'] = '../models/gpt2-positions/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods) + '-noswap'
+    model_args['with_resid'] = cfg.with_resid
 
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
@@ -165,7 +167,7 @@ if __name__ == "__main__":
 
     model.load_state_dict(state_dict, strict=False)
     model.eval()
-
+    
     layer_names = []
     for i in range(12):
         layer_names += [f'layer.{i}.attn', f'layer.{i}.mlp']
@@ -207,6 +209,7 @@ if __name__ == "__main__":
         for layer in layer_names:
 
             reshaped = spatial_outputs[layer][0].view(batch_size, batch_len, -1).mean(axis=1).detach().cpu()
+            # reshaped = spatial_outputs[layer][0].view(batch_size, batch_len, -1)[:, -1, :].detach().cpu()
 
             for i in range(batch_size):
                 activations[layer].append((reshaped[i], input_type[i]))
@@ -224,7 +227,7 @@ if __name__ == "__main__":
         # (num_samples, num_layers, n_embed)
         final_responses[condition] = np.stack(final_responses[condition], axis = 0)
 
-    savedir = SAVE_PATH + params
+    savedir = SAVE_PATH + name
     os.makedirs(savedir, exist_ok = True)
     
     with open(os.path.expanduser(savedir + '/' + cfg.stimulus + '.pkl'), 'wb') as f:

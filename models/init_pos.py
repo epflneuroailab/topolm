@@ -58,9 +58,11 @@ X, Y = get_batch()
 ### INTIALIZE MODEL ###
 
 if swapopt:
-    position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch)
+    position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-swapopt'
+elif bert:
+    position_dir = 'topoformer'
 else:
-    position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch) + '-random'
+    position_dir = 'gpt2-positions-' + str(radius) + '-' + str(neighborhoods_per_batch)
 
 layer_names = []
 for i in range(n_layer):
@@ -76,11 +78,12 @@ for name in layer_names:
 
     pos = LayerPositions(
         name = name,
-        coordinates = torch.Tensor(list(product(np.arange(28), repeat = 2))),
+        coordinates = torch.Tensor(list(product(np.arange(int(np.sqrt(n_embed))), repeat = 2))),
         neighborhood_indices = torch.zeros(size=(num_neighborhoods, n_embed), dtype=int),
         neighborhoods_per_batch = neighborhoods_per_batch)
 
-    pos.coordinates = pos.coordinates[torch.randperm(28 * 28)]
+    if not bert:
+        pos.coordinates = pos.coordinates[torch.randperm(n_embed)]
 
     mask = (pos.coordinates[:, 0] >= radius - 1) & (pos.coordinates[:, 0] <= N - radius) & \
            (pos.coordinates[:, 1] >= radius - 1) & (pos.coordinates[:, 1] <= N - radius)

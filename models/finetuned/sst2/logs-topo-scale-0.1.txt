@@ -1,0 +1,30 @@
+2024-09-10 23:12:23,128 GPTConfig(block_size=1024, vocab_size=50304, n_layer=12, n_head=16, n_embed=784, dropout=0.1, bias=False, position_dir='gpt2-positions-5-5', alpha=0.25, accum='mean', activation_decay=0, head_loss=False, attn_proj=False, finetune=True, with_resid=True)
+2024-09-10 23:12:23,398 Starting new HTTPS connection (1): openaipublic.blob.core.windows.net:443
+2024-09-10 23:12:27,918 https://openaipublic.blob.core.windows.net:443 "GET /gpt-2/encodings/main/vocab.bpe HTTP/11" 200 456318
+2024-09-10 23:12:28,782 Starting new HTTPS connection (1): openaipublic.blob.core.windows.net:443
+2024-09-10 23:12:29,283 https://openaipublic.blob.core.windows.net:443 "GET /gpt-2/encodings/main/encoder.json HTTP/11" 200 1042301
+2024-09-10 23:12:33,535 Popen(['git', 'version'], cwd=/mnt/nrathi/topo-eval/models, stdin=None, shell=False, universal_newlines=False)
+2024-09-10 23:12:33,539 Popen(['git', 'version'], cwd=/mnt/nrathi/topo-eval/models, stdin=None, shell=False, universal_newlines=False)
+2024-09-10 23:12:33,638 Trying paths: ['/home/nrathi/.docker/config.json', '/home/nrathi/.dockercfg']
+2024-09-10 23:12:33,638 No config file found
+2024-09-10 23:12:33,948 Starting new HTTPS connection (1): 10.233.0.1:443
+2024-09-10 23:12:33,960 https://10.233.0.1:443 "GET /api/v1/namespaces/default/pods/topo-sst2-01-0-0 HTTP/11" 403 345
+2024-09-10 23:12:33,967 Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+2024-09-10 23:12:33,974 Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/mnt/nrathi/topo-eval, stdin=None, shell=False, universal_newlines=False)
+2024-09-10 23:12:33,980 Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/mnt/nrathi/topo-eval, stdin=None, shell=False, universal_newlines=False)
+2024-09-10 23:12:35,235 Starting new HTTPS connection (1): api.wandb.ai:443
+2024-09-10 23:12:35,388 https://api.wandb.ai:443 "POST /graphql HTTP/11" 200 None
+2024-09-10 23:12:35,519 https://api.wandb.ai:443 "POST /graphql HTTP/11" 200 None
+2024-09-10 23:12:35,547 Popen(['git', 'cat-file', '--batch-check'], cwd=/mnt/nrathi/topo-eval, stdin=<valid stream>, shell=False, universal_newlines=False)
+2024-09-10 23:12:43,405 --------------------------------------------------
+2024-09-10 23:12:43,405 EVALUATING: ITERATION 0
+2024-09-10 23:12:43,405 Train | Total Loss: 2.8378 | Task Loss: 0.9472 | Spatial Loss: 1.8906 | Acc Loss: 0.4922
+2024-09-10 23:12:43,406 Valid | Total Loss: 2.9544 | Task Loss: 1.1028 | Spatial Loss: 1.8516 | Acc Loss: 0.5547
+2024-09-10 23:12:43,407 --------------------------------------------------
+2024-09-10 23:12:45,401 Iter 0 | Loss: 2.9678 | Time: 6013.48ms | MFU: -100.00%
+2024-09-10 23:13:35,644 --------------------------------------------------
+2024-09-10 23:13:35,644 EVALUATING: ITERATION 25
+2024-09-10 23:13:35,644 Train | Total Loss: 2.3423 | Task Loss: 0.7251 | Spatial Loss: 1.6172 | Acc Loss: 0.5312
+2024-09-10 23:13:35,644 Valid | Total Loss: 2.3450 | Task Loss: 0.6887 | Spatial Loss: 1.6562 | Acc Loss: 0.5625
+2024-09-10 23:13:35,646 ... saving checkpoint to finetuned/sst2/topo-scale-0.1.pt
+2024-09-10 23:13:38,367 --------------------------------------------------

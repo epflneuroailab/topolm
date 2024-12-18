@@ -1,0 +1,20 @@
+2024-09-11 02:14:57,443 GPTConfig(block_size=1024, vocab_size=50304, n_layer=12, n_head=16, n_embed=784, dropout=0.1, bias=False, position_dir='gpt2-positions-5-5', alpha=0.25, accum='mean', activation_decay=0, head_loss=False, attn_proj=False, finetune=True, with_resid=True)
+2024-09-11 02:14:57,593 Starting new HTTPS connection (1): openaipublic.blob.core.windows.net:443
+2024-09-11 02:15:01,118 https://openaipublic.blob.core.windows.net:443 "GET /gpt-2/encodings/main/vocab.bpe HTTP/11" 200 456318
+2024-09-11 02:15:01,806 Starting new HTTPS connection (1): openaipublic.blob.core.windows.net:443
+2024-09-11 02:15:02,314 https://openaipublic.blob.core.windows.net:443 "GET /gpt-2/encodings/main/encoder.json HTTP/11" 200 1042301
+2024-09-11 02:15:06,307 Popen(['git', 'version'], cwd=/mnt/nrathi/topo-eval/models, stdin=None, shell=False, universal_newlines=False)
+2024-09-11 02:15:06,311 Popen(['git', 'version'], cwd=/mnt/nrathi/topo-eval/models, stdin=None, shell=False, universal_newlines=False)
+2024-09-11 02:15:06,401 Trying paths: ['/home/nrathi/.docker/config.json', '/home/nrathi/.dockercfg']
+2024-09-11 02:15:06,401 No config file found
+2024-09-11 02:15:06,693 Starting new HTTPS connection (1): 10.233.0.1:443
+2024-09-11 02:15:06,700 https://10.233.0.1:443 "GET /api/v1/namespaces/default/pods/topo-qqp-01-0-0 HTTP/11" 403 343
+2024-09-11 02:15:06,704 Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+2024-09-11 02:15:06,711 Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/mnt/nrathi/topo-eval, stdin=None, shell=False, universal_newlines=False)
+2024-09-11 02:15:06,717 Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/mnt/nrathi/topo-eval, stdin=None, shell=False, universal_newlines=False)
+2024-09-11 02:15:07,740 Starting new HTTPS connection (1): api.wandb.ai:443
+2024-09-11 02:15:10,887 https://api.wandb.ai:443 "POST /graphql HTTP/11" 200 None
+2024-09-11 02:15:11,019 https://api.wandb.ai:443 "POST /graphql HTTP/11" 200 None
+2024-09-11 02:15:11,051 Popen(['git', 'cat-file', '--batch-check'], cwd=/mnt/nrathi/topo-eval, stdin=<valid stream>, shell=False, universal_newlines=False)
+2024-09-11 02:15:19,658 Starting new HTTPS connection (1): o151352.ingest.sentry.io:443
+2024-09-11 02:15:19,711 https://o151352.ingest.sentry.io:443 "POST /api/4504800232407040/envelope/ HTTP/11" 200 0

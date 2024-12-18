@@ -169,6 +169,7 @@ class GPTConfig:
     head_loss: bool = False
     attn_proj: bool = False
     finetune: bool = False
+    is_regression: bool = False
     with_resid: bool = True
 
 class GPT(nn.Module):
@@ -255,10 +256,11 @@ class GPT(nn.Module):
             # if we are given some desired targets also calculate the loss
             logits = self.lm_head(x)
 
-            
-            # eventually need to put this in an "if finetune" condition
             if self.config.finetune:
-                task_loss = F.cross_entropy(logits[:, -1, :], targets.view(-1), ignore_index=-1)
+                    if self.config.is_regression:
+                        task_loss = F.mse_loss(logits[:, -1, :].squeeze(-1), targets.to(torch.float32).view(-1))
+                    else:
+                        task_loss = F.cross_entropy(logits[:, -1, :], targets.view(-1), ignore_index=-1)
             else:
                 task_loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
 

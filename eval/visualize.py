@@ -7,16 +7,23 @@ from omegaconf import OmegaConf
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib import colors
+import matplotlib as mpl
+from matplotlib.gridspec import GridSpec
+from pathlib import Path
 
 import scipy
 import numpy as np
+import torch
+from itertools import product
+import pandas as pd
 
 from hrf import NeuronSmoothing
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
 import positions
 
-""" visualize topoformer activations and selectivity for a specific stimulus set """
+cold_hot = np.load('../figures/cold_hot_sampled_1000.npy')
+cold_hot_cmap = colors.ListedColormap(cold_hot)
 
 DATA_PATH = 'data/responses/'
 SAVE_PATH = 'data/contrasts/'
@@ -33,6 +40,11 @@ def log_transform(x):
 
 if __name__ == "__main__":
 
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.sans-serif"] = ["Arial"]
+
+    significance = lambda p: "***" if p < 0.001 else "**" if p < 0.01 else "*" if p < 0.05 else "n.s."
+
     cfg_file = 'vis_gpt2.yaml'
     for i, arg in enumerate(sys.argv):
         if arg[:3] == 'cfg':
@@ -42,7 +54,8 @@ if __name__ == "__main__":
     cfg = OmegaConf.load(cfg_file)
     cfg.update(OmegaConf.from_cli())
 
-    position_dir = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods)
+    position_dir = '../models/gpt2-positions/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods)
+    # position_dir = '../models/gpt2-positions/topoformer'
 
     fwhm_mm = 2.0
     resolution_mm = 1
@@ -50,13 +63,17 @@ if __name__ == "__main__":
 
     print('Loading data...')
 
-    params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
-    params = '-'.join([str(p) for p in params])
+    # params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
+    # params = '-'.join([str(p) for p in params])
+    name = cfg.name
 
-    with open(DATA_PATH + params + '/' + cfg.stimulus + '.pkl', 'rb') as f:
+    with open(DATA_PATH + name + '/' + cfg.stimulus + '.pkl', 'rb') as f:
         data = pkl.load(f)
 
-    os.makedirs(FIG_PATH + params + '/' + cfg.stimulus, exist_ok = True)
+    # p_values = pd.read_csv(f'moran_{name}.csv')
+    # p_values = p_values.T
+
+    os.makedirs(FIG_PATH + name + '/' + cfg.stimulus, exist_ok = True)
 
     num_units = 784
     layer_names = []
@@ -119,8 +136,8 @@ if __name__ == "__main__":
 
         contrasts = {
             'noun_verb' : [
-                np.concatenate([data[key] for key in all_conditions if key[-4:] == 'noun'], axis=0),
-                np.concatenate([data[key] for key in all_conditions if key[-4:] == 'verb'], axis=0)
+                np.concatenate([data[key] for key in all_conditions if key[-4:] == 'verb'], axis=0),
+                np.concatenate([data[key] for key in all_conditions if key[-4:] == 'noun'], axis=0)
             ]
         }
     else:
@@ -132,8 +149,8 @@ if __name__ == "__main__":
         # (n_layers, n_embed)
         activations = data[condition].mean(axis = 0)
 
-        fig, axes = plt.subplots(6, 4, figsize=(15, 20))
-        plt.suptitle(f'{cfg.stimulus} | {condition} | decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
+        fig, axes = plt.subplots(4, 4, figsize=(15, 15))
+        plt.suptitle(f'{cfg.stimulus} | {condition} | {name}',
             ha='center',
             fontsize=24)
 
@@ -143,12 +160,15 @@ if __name__ == "__main__":
                 pos = pkl.load(f)
             
             coordinates = pos.coordinates.to(int)
+
+            coordinates = torch.Tensor(list(product(np.arange(28), repeat = 2))).to(int)
+
             gridx, gridy, smoothed_activations = smoothing(coordinates.numpy(), activations[i])
             # ax.scatter(gridy, -gridx, c=smoothed_activations, cmap='RdBu_r', s=32, marker='s')
 
             grid = np.full((28, 28), np.nan)
             grid[gridx.astype(int).squeeze(), gridy.astype(int).squeeze()] = smoothed_activations
-            sns.heatmap(grid, ax=ax, cbar=False, cmap='RdBu_r', center=0)
+            sns.heatmap(grid, ax=ax, cbar=False, cmap='viridis', center=0)
 
             ax.set_title(f'{layer_names[i]}')
             ax.axis('off')
@@ -158,11 +178,14 @@ if __name__ == "__main__":
         cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
         norm = colors.TwoSlopeNorm(vmin=np.min(activations), vcenter = 0, vmax=np.max(activations))
 
-        sm = plt.cm.ScalarMappable(cmap = 'RdBu_r', norm=norm)
+        sm = plt.cm.ScalarMappable(cmap = 'viridis', norm=norm)
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
 
-        plt.savefig(FIG_PATH + params + '/' + cfg.stimulus + '/' + condition + '.png')
+        # plt.savefig(FIG_PATH + name + '/' + cfg.stimulus + '-unsmoothed/' + condition + '.png')
+        # plt.savefig(FIG_PATH + name + '/' + cfg.stimulus + '-unsmoothed/' + condition + '.svg')
+        plt.savefig(FIG_PATH + name + '/' + cfg.stimulus + '/' + condition + '.png')
+        plt.savefig(FIG_PATH + name + '/' + cfg.stimulus + '/' + condition + '.svg')
 
     ### CONTRAST PLOTS ###
     print('Plotting all contrasts...')
@@ -197,10 +220,13 @@ if __name__ == "__main__":
 
         adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
         adjusted_p_values = adjusted_p_values.reshape((len(layer_names), activations[0].shape[1]))
-        selectivity = t_values_matrix * (adjusted_p_values < 0.05)
+        selectivity = t_values_matrix.copy()
+        selectivity[adjusted_p_values > 0.05] = np.nan
+        print(f'{100 * (adjusted_p_values < 0.05).sum() / t_values_matrix.flatten().shape[0]}% of units significant')
 
-        fig, axes = plt.subplots(6, 4, figsize=(15, 20))
-        plt.suptitle(f'{cfg.stimulus} | {condition} | decay {cfg.decay} | alpha {cfg.alpha} | radius {cfg.radius} | {cfg.neighborhoods} per iter',
+        # fig, axes = plt.subplots(6, 4, figsize=(15, 20))
+        fig, axes = plt.subplots(4, 4, figsize=(15, 15))
+        plt.suptitle(f'{cfg.stimulus} | {condition}',
             ha='center',
             fontsize=24)
 
@@ -222,17 +248,21 @@ if __name__ == "__main__":
         plt.tight_layout(rect=[0, 0, 0.9, 0.98])
 
         cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
-        bound = max(abs(np.min(smoothed_activations)), abs(np.max(smoothed_activations)))
+        bound = max(abs(np.nanmin(smoothed_activations)), abs(np.nanmax(smoothed_activations)))
         norm = colors.TwoSlopeNorm(vmin=-bound, vcenter = 0, vmax=bound)
 
         sm = plt.cm.ScalarMappable(cmap = 'RdBu_r', norm=norm)
         sm.set_array([])
         fig.colorbar(sm, cax=cbar_ax)
-        
-        plt.savefig(FIG_PATH + params + '/' + cfg.stimulus + '/' + condition + '_contrast.png')
 
-        os.makedirs(os.path.join(SAVE_PATH, params, cfg.stimulus), exist_ok = True)
-        with open(os.path.join(SAVE_PATH, params, cfg.stimulus, f'{condition}.pkl'), 'wb') as f:
+        # plt.savefig(FIG_PATH + name + '/' + cfg.stimulus + '-unsmoothed/' + condition + '-contrast.png')
+        # plt.savefig(FIG_PATH + name + '/' + cfg.stimulus + '-unsmoothed/' + condition + '-contrast.svg')
+        
+        plt.savefig(FIG_PATH + name + '/' + cfg.stimulus + '/' + condition + '_contrast.png')
+        plt.savefig(FIG_PATH + name + '/' + cfg.stimulus + '/' + condition + '_contrast.svg')
+
+        os.makedirs(os.path.join(SAVE_PATH, name, f'{cfg.stimulus}'), exist_ok = True)
+        with open(os.path.join(SAVE_PATH, name, f'{cfg.stimulus}/', f'{condition}.pkl'), 'wb') as f:
             pkl.dump({
                 'raw'         : raw_matrix,
                 'selectivity' : selectivity,

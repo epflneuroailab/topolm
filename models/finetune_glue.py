@@ -32,7 +32,7 @@ import itertools
 
 from contextlib import nullcontext
 from omegaconf import OmegaConf
-from datasets import load_dataset
+from datasets import load_dataset, concatenate_datasets
 
 import numpy as np
 import torch
@@ -95,19 +95,31 @@ ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torc
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
 # huggingface dataset
+is_regression = task == "stsb"
 dataset = load_dataset("nyu-mll/glue", task)
-num_labels = len(dataset['train'].features['label'].names)
 
-if task == 'mnli':
-    dataloader = {
-        'train' : DataLoader(dataset['train'], batch_size=batch_size, shuffle = True),
-        'val'   : DataLoader(dataset['validation_matched'], batch_size=batch_size, shuffle = True)
-    }
+if is_regression:
+    num_labels = 1
 else:
-    dataloader = {
-        'train' : DataLoader(dataset['train'], batch_size=batch_size, shuffle = True),
-        'val'   : DataLoader(dataset['validation'], batch_size=batch_size, shuffle = True)
-    }
+    num_labels = len(dataset['train'].features['label'].names)
+
+
+if task == 'cola' or task == 'sst2':
+    s_names = ['sentence']
+elif task == 'mnli':
+    s_names = ['premise', 'hypothesis']
+elif task == 'qqp':
+    s_names = ['question1', 'question2']
+elif task == 'qnli':
+    s_names = ['question', 'sentence']
+else:
+    s_names = ['sentence1', 'sentence2']
+
+val_dataset = concatenate_datasets([dataset['validation_matched'], dataset['validation_mismatched']]) if task == 'mnli' else dataset['validation']
+dataloader = {
+    'train' : DataLoader(dataset['train'], batch_size=batch_size, shuffle = True),
+    'val'   : DataLoader(val_dataset, batch_size=batch_size, shuffle = True)
+}
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
@@ -120,14 +132,16 @@ checkpoint = torch.load(ckpt_path, map_location=device)
 # we can change dropout, nothing else
 model_args = checkpoint['model_args']
 model_args['dropout'] = dropout
-model_args['alpha'] = 0.1 * model_args['alpha']
+model_args['alpha'] = alpha_scale * model_args['alpha']
 model_args['finetune'] = True
+model_args['is_regression'] = is_regression
+model_args['position_dir'] = position_dir
 
 if master_process:
-    os.makedirs(os.path.join('finetuned', task, f'a{model_args["alpha"]}-l{weight_decay}-lr{learning_rate}-d{dropout}-b{batch_size}'), exist_ok=True)
+    os.makedirs(os.path.join('finetuned', task), exist_ok=True)
 
     # logging
-    logging.basicConfig(filename=os.path.join('finetuned', task, f'a{model_args["alpha"]}-l{weight_decay}-lr{learning_rate}-d{dropout}-b{batch_size}', 'logs.txt'),
+    logging.basicConfig(filename=os.path.join('finetuned', task, f'logs-{model_name}-scale-{alpha_scale}.txt'),
         level=logging.DEBUG,
         format='%(asctime)s %(message)s',
         filemode='w')
@@ -172,6 +186,18 @@ def tokenize_batch(sents):
         
     return torch.from_numpy(padded), torch.from_numpy(attn_mask)
 
+def matthews_corrcoef(y_true, y_pred):
+
+    TP = torch.sum((y_true == 1) & (y_pred == 1)).float()
+    TN = torch.sum((y_true == 0) & (y_pred == 0)).float()
+    FP = torch.sum((y_true == 0) & (y_pred == 1)).float()
+    FN = torch.sum((y_true == 1) & (y_pred == 0)).float()
+
+    numerator = (TP * TN) - (FP * FN)
+    denominator = torch.sqrt((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN))
+    
+    return numerator / denominator if denominator != 0 else torch.tensor(0.0)
+
 # initialize a GradScaler. If enabled=False scaler is a no-op
 scaler = torch.cuda.amp.GradScaler(enabled=(dtype == 'float16'))
 
@@ -204,11 +230,11 @@ def estimate_loss():
 
         for i, batch in enumerate(dataloader[split]):
 
-            if task == 'mnli':
-                sents = ['<|endoftext|>'.join(x) for x in zip(batch['premise'], batch['hypothesis'])]
+            if len(s_names) == 2:
+                sents = ['$'.join(x) for x in zip(batch[s_names[0]], batch[s_names[1]])]
             else:
-                sents = batch['sentence']
-            
+                sents = batch[s_names[0]]
+
             X, attn_mask = tokenize_batch(sents)
             X = X.to(device)
             attn_mask = attn_mask.to(device)
@@ -221,8 +247,16 @@ def estimate_loss():
             losses[i] = loss.item()
             task_losses[i] = task_loss.item()
             spatial_losses[i] = spatial_loss.item()
-            predictions = (torch.nn.functional.softmax(logits[:, -1, :], dim=-1).argmax(dim=-1) == Y.squeeze())
-            accuracies[i] = sum(predictions) / len(predictions)
+
+            predictions = torch.nn.functional.softmax(logits[:, -1, :], dim=-1).argmax(dim=-1)
+
+            if task == 'stsb':
+                stacked = torch.stack((logits[:, -1, :].squeeze(-1), Y.view(-1).to(torch.float32)))
+                accuracies[i] = torch.corrcoef(stacked)[0, 1]
+            if task == 'cola':
+                accuracies[i] = matthews_corrcoef(Y.view(-1), predictions)
+            else:
+                accuracies[i] = sum(predictions == Y.squeeze()) / len(predictions == Y.squeeze())
 
             if i >= n_batches - 1:
                 break
@@ -253,7 +287,7 @@ def iterlog(iter_num, lossf, dt, running_mfu):
 # logging
 if wandb_log and master_process:
     import wandb
-    wandb_run_name += f'-a{model_args["alpha"]}-l{weight_decay}-lr{learning_rate}-d{dropout}-b{batch_size}'
+    wandb_run_name += f'-{model_name}-scale-{alpha_scale}'
     wandb.init(project=wandb_project, name=wandb_run_name, config=cfg)
 
 # training loop
@@ -308,11 +342,9 @@ for iter_num in range(max_iters):
 
                 # if iter_num != eval_interval:
                 #     os.rename(os.path.join(out_dir, 'ckpt.pt'), os.path.join(out_dir, f'ckpt-{(iter_num // eval_interval) - 1}.pt'))
-
-                if iter_num % save_interval == 0:
-                    logging.info(f"... saving checkpoint to finetuned/{task}/ckpt.pt")
-                    os.makedirs(os.path.join('finetuned', task, f'a{model_args["alpha"]}-l{weight_decay}-lr{learning_rate}-d{dropout}-b{batch_size}'), exist_ok=True)
-                    torch.save(checkpoint, os.path.join('finetuned', task, f'a{model_args["alpha"]}-l{weight_decay}-lr{learning_rate}-d{dropout}-b{batch_size}', 'ckpt.pt'))
+                logging.info(f"... saving checkpoint to finetuned/{task}/{model_name}-scale-{alpha_scale}.pt")
+                os.makedirs(os.path.join('finetuned', task), exist_ok=True)
+                torch.save(checkpoint, os.path.join('finetuned', task, f'{model_name}-scale-{alpha_scale}.pt'))
 
             logging.info('-' * 50)
 
@@ -323,7 +355,7 @@ for iter_num in range(max_iters):
 
         prev_val_loss = losses['val'][0]
         
-        if early_stop_counter > 3:
+        if early_stop_counter > early_stop_point:
             break
 
     for micro_step in range(gradient_accumulation_steps):
@@ -331,10 +363,10 @@ for iter_num in range(max_iters):
         loss = 0
         for i, batch in enumerate(dataloader['train']):
 
-            if task == 'mnli':
-                sents = [' '.join(x) for x in zip(batch['premise'], batch['hypothesis'])]
+            if len(s_names) == 2:
+                sents = ['$'.join(x) for x in zip(batch[s_names[0]], batch[s_names[1]])]
             else:
-                sents = batch['sentence']
+                sents = batch[s_names[0]]
 
             X, attn_mask = tokenize_batch(sents)
             X = X.to(device)
@@ -346,7 +378,7 @@ for iter_num in range(max_iters):
                 model.require_backward_grad_sync = (micro_step == gradient_accumulation_steps - 1)
 
             with ctx:
-                _, batch_loss, _, _, _ = model(X, Y, attn_mask)
+                logits, batch_loss, _, _, _ = model(X, Y, attn_mask)
                 loss += batch_loss.to('cpu') / gradient_accumulation_steps # scale the loss to account for gradient accumulation
 
             if i >= n_batches - 1:

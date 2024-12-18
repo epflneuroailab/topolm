@@ -1,0 +1,10 @@
+model_name: 'preresid'
+input_text: 'examples/input.txt'
+output_dir: 'examples'
+pos_dir: '../models/gpt2-positions/gpt2-positions-5-5'
+
+num_samples: 1
+max_new_tokens: 50
+temperature: 1.0
+top_k: 200
+seed: 42

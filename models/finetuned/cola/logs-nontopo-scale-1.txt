@@ -1,0 +1,211 @@
+2024-09-10 23:14:48,027 GPTConfig(block_size=1024, vocab_size=50304, n_layer=12, n_head=16, n_embed=784, dropout=0.1, bias=False, position_dir='gpt2-positions-5-5', alpha=0, accum='mean', activation_decay=0, head_loss=False, attn_proj=False, finetune=True, with_resid=True)
+2024-09-10 23:14:48,177 Starting new HTTPS connection (1): openaipublic.blob.core.windows.net:443
+2024-09-10 23:14:50,701 https://openaipublic.blob.core.windows.net:443 "GET /gpt-2/encodings/main/vocab.bpe HTTP/11" 200 456318
+2024-09-10 23:14:51,825 Starting new HTTPS connection (1): openaipublic.blob.core.windows.net:443
+2024-09-10 23:14:52,359 https://openaipublic.blob.core.windows.net:443 "GET /gpt-2/encodings/main/encoder.json HTTP/11" 200 1042301
+2024-09-10 23:14:56,118 Popen(['git', 'version'], cwd=/mnt/nrathi/topo-eval/models, stdin=None, shell=False, universal_newlines=False)
+2024-09-10 23:14:56,132 Popen(['git', 'version'], cwd=/mnt/nrathi/topo-eval/models, stdin=None, shell=False, universal_newlines=False)
+2024-09-10 23:14:56,237 Trying paths: ['/home/nrathi/.docker/config.json', '/home/nrathi/.dockercfg']
+2024-09-10 23:14:56,237 No config file found
+2024-09-10 23:14:56,512 Starting new HTTPS connection (1): 10.233.0.1:443
+2024-09-10 23:14:56,520 https://10.233.0.1:443 "GET /api/v1/namespaces/default/pods/nontopo-cola-0-0 HTTP/11" 403 345
+2024-09-10 23:14:56,534 Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+2024-09-10 23:14:56,540 Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/mnt/nrathi/topo-eval, stdin=None, shell=False, universal_newlines=False)
+2024-09-10 23:14:56,561 Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/mnt/nrathi/topo-eval, stdin=None, shell=False, universal_newlines=False)
+2024-09-10 23:14:57,830 Starting new HTTPS connection (1): api.wandb.ai:443
+2024-09-10 23:14:58,011 https://api.wandb.ai:443 "POST /graphql HTTP/11" 200 None
+2024-09-10 23:14:58,149 https://api.wandb.ai:443 "POST /graphql HTTP/11" 200 None
+2024-09-10 23:14:58,226 Popen(['git', 'cat-file', '--batch-check'], cwd=/mnt/nrathi/topo-eval, stdin=<valid stream>, shell=False, universal_newlines=False)
+2024-09-10 23:15:05,081 --------------------------------------------------
+2024-09-10 23:15:05,081 EVALUATING: ITERATION 0
+2024-09-10 23:15:05,081 Train | Total Loss: 1.0464 | Task Loss: 1.0464 | Spatial Loss: 0.0000 | Acc Loss: 0.3047
+2024-09-10 23:15:05,081 Valid | Total Loss: 1.0770 | Task Loss: 1.0770 | Spatial Loss: 0.0000 | Acc Loss: 0.2812
+2024-09-10 23:15:05,083 --------------------------------------------------
+2024-09-10 23:15:05,563 Iter 0 | Loss: 0.7417 | Time: 3453.18ms | MFU: -100.00%
+2024-09-10 23:15:15,142 --------------------------------------------------
+2024-09-10 23:15:15,142 EVALUATING: ITERATION 25
+2024-09-10 23:15:15,142 Train | Total Loss: 0.6049 | Task Loss: 0.6049 | Spatial Loss: 0.0000 | Acc Loss: 0.7188
+2024-09-10 23:15:15,142 Valid | Total Loss: 0.6193 | Task Loss: 0.6193 | Spatial Loss: 0.0000 | Acc Loss: 0.6953
+2024-09-10 23:15:15,143 ... saving checkpoint to finetuned/cola/nontopo-scale-1.pt
+2024-09-10 23:15:17,726 --------------------------------------------------
+2024-09-10 23:15:26,946 --------------------------------------------------
+2024-09-10 23:15:26,946 EVALUATING: ITERATION 50
+2024-09-10 23:15:26,946 Train | Total Loss: 0.5321 | Task Loss: 0.5321 | Spatial Loss: 0.0000 | Acc Loss: 0.7734
+2024-09-10 23:15:26,946 Valid | Total Loss: 0.5815 | Task Loss: 0.5815 | Spatial Loss: 0.0000 | Acc Loss: 0.7344
+2024-09-10 23:15:26,948 ... saving checkpoint to finetuned/cola/nontopo-scale-1.pt
+2024-09-10 23:15:29,757 --------------------------------------------------
+2024-09-10 23:15:30,199 Iter 50 | Loss: 0.6919 | Time: 3381.86ms | MFU: 54.87%
+2024-09-10 23:15:39,820 --------------------------------------------------
+2024-09-10 23:15:39,821 EVALUATING: ITERATION 75
+2024-09-10 23:15:39,821 Train | Total Loss: 0.5679 | Task Loss: 0.5679 | Spatial Loss: 0.0000 | Acc Loss: 0.7500
+2024-09-10 23:15:39,821 Valid | Total Loss: 0.6693 | Task Loss: 0.6693 | Spatial Loss: 0.0000 | Acc Loss: 0.6250
+2024-09-10 23:15:49,582 --------------------------------------------------
+2024-09-10 23:15:49,583 EVALUATING: ITERATION 100
+2024-09-10 23:15:49,583 Train | Total Loss: 0.5813 | Task Loss: 0.5813 | Spatial Loss: 0.0000 | Acc Loss: 0.7266
+2024-09-10 23:15:49,583 Valid | Total Loss: 0.6365 | Task Loss: 0.6365 | Spatial Loss: 0.0000 | Acc Loss: 0.6719
+2024-09-10 23:15:49,998 Iter 100 | Loss: 0.6496 | Time: 566.20ms | MFU: 82.16%
+2024-09-10 23:16:00,893 --------------------------------------------------
+2024-09-10 23:16:00,893 EVALUATING: ITERATION 125
+2024-09-10 23:16:00,893 Train | Total Loss: 0.5820 | Task Loss: 0.5820 | Spatial Loss: 0.0000 | Acc Loss: 0.7188
+2024-09-10 23:16:00,893 Valid | Total Loss: 0.6352 | Task Loss: 0.6352 | Spatial Loss: 0.0000 | Acc Loss: 0.6719
+2024-09-10 23:16:10,143 --------------------------------------------------
+2024-09-10 23:16:10,143 EVALUATING: ITERATION 150
+2024-09-10 23:16:10,143 Train | Total Loss: 0.5565 | Task Loss: 0.5565 | Spatial Loss: 0.0000 | Acc Loss: 0.7656
+2024-09-10 23:16:10,143 Valid | Total Loss: 0.6175 | Task Loss: 0.6175 | Spatial Loss: 0.0000 | Acc Loss: 0.6875
+2024-09-10 23:16:10,805 Iter 150 | Loss: 0.5614 | Time: 796.11ms | MFU: 97.25%
+2024-09-10 23:16:21,188 --------------------------------------------------
+2024-09-10 23:16:21,189 EVALUATING: ITERATION 175
+2024-09-10 23:16:21,189 Train | Total Loss: 0.5851 | Task Loss: 0.5851 | Spatial Loss: 0.0000 | Acc Loss: 0.7188
+2024-09-10 23:16:21,189 Valid | Total Loss: 0.6646 | Task Loss: 0.6646 | Spatial Loss: 0.0000 | Acc Loss: 0.6328
+2024-09-10 23:16:31,120 --------------------------------------------------
+2024-09-10 23:16:31,120 EVALUATING: ITERATION 200
+2024-09-10 23:16:31,120 Train | Total Loss: 0.6448 | Task Loss: 0.6448 | Spatial Loss: 0.0000 | Acc Loss: 0.6562
+2024-09-10 23:16:31,120 Valid | Total Loss: 0.6409 | Task Loss: 0.6409 | Spatial Loss: 0.0000 | Acc Loss: 0.6562
+2024-09-10 23:16:31,497 Iter 200 | Loss: 0.6103 | Time: 420.39ms | MFU: 131.67%
+2024-09-10 23:16:40,348 --------------------------------------------------
+2024-09-10 23:16:40,348 EVALUATING: ITERATION 225
+2024-09-10 23:16:40,348 Train | Total Loss: 0.5806 | Task Loss: 0.5806 | Spatial Loss: 0.0000 | Acc Loss: 0.7109
+2024-09-10 23:16:40,348 Valid | Total Loss: 0.6500 | Task Loss: 0.6500 | Spatial Loss: 0.0000 | Acc Loss: 0.6641
+2024-09-10 23:16:50,497 --------------------------------------------------
+2024-09-10 23:16:50,497 EVALUATING: ITERATION 250
+2024-09-10 23:16:50,497 Train | Total Loss: 0.6147 | Task Loss: 0.6147 | Spatial Loss: 0.0000 | Acc Loss: 0.6719
+2024-09-10 23:16:50,497 Valid | Total Loss: 0.6336 | Task Loss: 0.6336 | Spatial Loss: 0.0000 | Acc Loss: 0.6719
+2024-09-10 23:16:50,752 Iter 250 | Loss: 0.5679 | Time: 410.36ms | MFU: 163.72%
+2024-09-10 23:17:00,275 --------------------------------------------------
+2024-09-10 23:17:00,275 EVALUATING: ITERATION 275
+2024-09-10 23:17:00,275 Train | Total Loss: 0.6156 | Task Loss: 0.6156 | Spatial Loss: 0.0000 | Acc Loss: 0.6797
+2024-09-10 23:17:00,275 Valid | Total Loss: 0.5815 | Task Loss: 0.5815 | Spatial Loss: 0.0000 | Acc Loss: 0.7188
+2024-09-10 23:17:09,331 --------------------------------------------------
+2024-09-10 23:17:09,331 EVALUATING: ITERATION 300
+2024-09-10 23:17:09,331 Train | Total Loss: 0.5557 | Task Loss: 0.5557 | Spatial Loss: 0.0000 | Acc Loss: 0.7188
+2024-09-10 23:17:09,331 Valid | Total Loss: 0.5317 | Task Loss: 0.5317 | Spatial Loss: 0.0000 | Acc Loss: 0.7656
+2024-09-10 23:17:09,333 ... saving checkpoint to finetuned/cola/nontopo-scale-1.pt
+2024-09-10 23:17:12,358 --------------------------------------------------
+2024-09-10 23:17:12,691 Iter 300 | Loss: 0.5727 | Time: 3461.65ms | MFU: 152.71%
+2024-09-10 23:17:22,134 --------------------------------------------------
+2024-09-10 23:17:22,135 EVALUATING: ITERATION 325
+2024-09-10 23:17:22,135 Train | Total Loss: 0.5339 | Task Loss: 0.5339 | Spatial Loss: 0.0000 | Acc Loss: 0.7656
+2024-09-10 23:17:22,135 Valid | Total Loss: 0.6301 | Task Loss: 0.6301 | Spatial Loss: 0.0000 | Acc Loss: 0.6562
+2024-09-10 23:17:31,641 --------------------------------------------------
+2024-09-10 23:17:31,641 EVALUATING: ITERATION 350
+2024-09-10 23:17:31,641 Train | Total Loss: 0.5580 | Task Loss: 0.5580 | Spatial Loss: 0.0000 | Acc Loss: 0.6875
+2024-09-10 23:17:31,641 Valid | Total Loss: 0.6593 | Task Loss: 0.6593 | Spatial Loss: 0.0000 | Acc Loss: 0.5938
+2024-09-10 23:17:32,014 Iter 350 | Loss: 0.5563 | Time: 458.29ms | MFU: 177.93%
+2024-09-10 23:17:41,429 --------------------------------------------------
+2024-09-10 23:17:41,429 EVALUATING: ITERATION 375
+2024-09-10 23:17:41,429 Train | Total Loss: 0.5056 | Task Loss: 0.5056 | Spatial Loss: 0.0000 | Acc Loss: 0.7812
+2024-09-10 23:17:41,430 Valid | Total Loss: 0.6087 | Task Loss: 0.6087 | Spatial Loss: 0.0000 | Acc Loss: 0.7031
+2024-09-10 23:17:51,269 --------------------------------------------------
+2024-09-10 23:17:51,269 EVALUATING: ITERATION 400
+2024-09-10 23:17:51,270 Train | Total Loss: 0.5101 | Task Loss: 0.5101 | Spatial Loss: 0.0000 | Acc Loss: 0.7891
+2024-09-10 23:17:51,270 Valid | Total Loss: 0.5727 | Task Loss: 0.5727 | Spatial Loss: 0.0000 | Acc Loss: 0.7031
+2024-09-10 23:17:51,656 Iter 400 | Loss: 0.6690 | Time: 556.47ms | MFU: 193.48%
+2024-09-10 23:18:01,384 --------------------------------------------------
+2024-09-10 23:18:01,385 EVALUATING: ITERATION 425
+2024-09-10 23:18:01,385 Train | Total Loss: 0.5543 | Task Loss: 0.5543 | Spatial Loss: 0.0000 | Acc Loss: 0.7109
+2024-09-10 23:18:01,385 Valid | Total Loss: 0.5775 | Task Loss: 0.5775 | Spatial Loss: 0.0000 | Acc Loss: 0.7500
+2024-09-10 23:18:11,523 --------------------------------------------------
+2024-09-10 23:18:11,523 EVALUATING: ITERATION 450
+2024-09-10 23:18:11,523 Train | Total Loss: 0.5651 | Task Loss: 0.5651 | Spatial Loss: 0.0000 | Acc Loss: 0.7344
+2024-09-10 23:18:11,523 Valid | Total Loss: 0.6960 | Task Loss: 0.6960 | Spatial Loss: 0.0000 | Acc Loss: 0.6484
+2024-09-10 23:18:11,811 Iter 450 | Loss: 0.5810 | Time: 449.47ms | MFU: 215.42%
+2024-09-10 23:18:21,342 --------------------------------------------------
+2024-09-10 23:18:21,342 EVALUATING: ITERATION 475
+2024-09-10 23:18:21,342 Train | Total Loss: 0.4345 | Task Loss: 0.4345 | Spatial Loss: 0.0000 | Acc Loss: 0.7578
+2024-09-10 23:18:21,342 Valid | Total Loss: 0.5726 | Task Loss: 0.5726 | Spatial Loss: 0.0000 | Acc Loss: 0.6953
+2024-09-10 23:18:31,005 --------------------------------------------------
+2024-09-10 23:18:31,005 EVALUATING: ITERATION 500
+2024-09-10 23:18:31,005 Train | Total Loss: 0.4590 | Task Loss: 0.4590 | Spatial Loss: 0.0000 | Acc Loss: 0.7812
+2024-09-10 23:18:31,005 Valid | Total Loss: 0.6998 | Task Loss: 0.6998 | Spatial Loss: 0.0000 | Acc Loss: 0.6797
+2024-09-10 23:18:31,384 Iter 500 | Loss: 0.4346 | Time: 539.53ms | MFU: 228.27%
+2024-09-10 23:18:40,130 --------------------------------------------------
+2024-09-10 23:18:40,130 EVALUATING: ITERATION 525
+2024-09-10 23:18:40,130 Train | Total Loss: 0.5081 | Task Loss: 0.5081 | Spatial Loss: 0.0000 | Acc Loss: 0.7656
+2024-09-10 23:18:40,130 Valid | Total Loss: 0.6671 | Task Loss: 0.6671 | Spatial Loss: 0.0000 | Acc Loss: 0.6875
+2024-09-10 23:18:49,910 --------------------------------------------------
+2024-09-10 23:18:49,910 EVALUATING: ITERATION 550
+2024-09-10 23:18:49,911 Train | Total Loss: 0.4072 | Task Loss: 0.4072 | Spatial Loss: 0.0000 | Acc Loss: 0.7734
+2024-09-10 23:18:49,911 Valid | Total Loss: 0.7113 | Task Loss: 0.7113 | Spatial Loss: 0.0000 | Acc Loss: 0.6641
+2024-09-10 23:18:50,324 Iter 550 | Loss: 0.5018 | Time: 558.89ms | MFU: 238.65%
+2024-09-10 23:19:00,051 --------------------------------------------------
+2024-09-10 23:19:00,051 EVALUATING: ITERATION 575
+2024-09-10 23:19:00,051 Train | Total Loss: 0.4807 | Task Loss: 0.4807 | Spatial Loss: 0.0000 | Acc Loss: 0.7422
+2024-09-10 23:19:00,051 Valid | Total Loss: 0.7864 | Task Loss: 0.7864 | Spatial Loss: 0.0000 | Acc Loss: 0.6172
+2024-09-10 23:19:09,898 --------------------------------------------------
+2024-09-10 23:19:09,898 EVALUATING: ITERATION 600
+2024-09-10 23:19:09,899 Train | Total Loss: 0.3943 | Task Loss: 0.3943 | Spatial Loss: 0.0000 | Acc Loss: 0.8047
+2024-09-10 23:19:09,899 Valid | Total Loss: 0.5912 | Task Loss: 0.5912 | Spatial Loss: 0.0000 | Acc Loss: 0.7266
+2024-09-10 23:19:10,329 Iter 600 | Loss: 0.4168 | Time: 505.50ms | MFU: 251.49%
+2024-09-10 23:19:20,379 --------------------------------------------------
+2024-09-10 23:19:20,380 EVALUATING: ITERATION 625
+2024-09-10 23:19:20,380 Train | Total Loss: 0.3354 | Task Loss: 0.3354 | Spatial Loss: 0.0000 | Acc Loss: 0.8203
+2024-09-10 23:19:20,380 Valid | Total Loss: 0.8892 | Task Loss: 0.8892 | Spatial Loss: 0.0000 | Acc Loss: 0.6406
+2024-09-10 23:19:30,417 --------------------------------------------------
+2024-09-10 23:19:30,418 EVALUATING: ITERATION 650
+2024-09-10 23:19:30,418 Train | Total Loss: 0.3762 | Task Loss: 0.3762 | Spatial Loss: 0.0000 | Acc Loss: 0.7891
+2024-09-10 23:19:30,418 Valid | Total Loss: 0.7914 | Task Loss: 0.7914 | Spatial Loss: 0.0000 | Acc Loss: 0.6172
+2024-09-10 23:19:30,887 Iter 650 | Loss: 0.3711 | Time: 597.53ms | MFU: 257.40%
+2024-09-10 23:19:40,551 --------------------------------------------------
+2024-09-10 23:19:40,551 EVALUATING: ITERATION 675
+2024-09-10 23:19:40,552 Train | Total Loss: 0.3097 | Task Loss: 0.3097 | Spatial Loss: 0.0000 | Acc Loss: 0.8672
+2024-09-10 23:19:40,552 Valid | Total Loss: 0.6669 | Task Loss: 0.6669 | Spatial Loss: 0.0000 | Acc Loss: 0.7188
+2024-09-10 23:19:51,026 --------------------------------------------------
+2024-09-10 23:19:51,026 EVALUATING: ITERATION 700
+2024-09-10 23:19:51,026 Train | Total Loss: 0.3270 | Task Loss: 0.3270 | Spatial Loss: 0.0000 | Acc Loss: 0.8203
+2024-09-10 23:19:51,026 Valid | Total Loss: 0.9285 | Task Loss: 0.9285 | Spatial Loss: 0.0000 | Acc Loss: 0.6328
+2024-09-10 23:19:51,417 Iter 700 | Loss: 0.4048 | Time: 552.14ms | MFU: 265.27%
+2024-09-10 23:20:00,748 --------------------------------------------------
+2024-09-10 23:20:00,748 EVALUATING: ITERATION 725
+2024-09-10 23:20:00,749 Train | Total Loss: 0.2871 | Task Loss: 0.2871 | Spatial Loss: 0.0000 | Acc Loss: 0.8672
+2024-09-10 23:20:00,749 Valid | Total Loss: 0.8304 | Task Loss: 0.8304 | Spatial Loss: 0.0000 | Acc Loss: 0.6328
+2024-09-10 23:20:10,383 --------------------------------------------------
+2024-09-10 23:20:10,384 EVALUATING: ITERATION 750
+2024-09-10 23:20:10,384 Train | Total Loss: 0.3584 | Task Loss: 0.3584 | Spatial Loss: 0.0000 | Acc Loss: 0.8125
+2024-09-10 23:20:10,384 Valid | Total Loss: 0.7613 | Task Loss: 0.7613 | Spatial Loss: 0.0000 | Acc Loss: 0.6719
+2024-09-10 23:20:10,848 Iter 750 | Loss: 0.3857 | Time: 624.77ms | MFU: 268.44%
+2024-09-10 23:20:19,908 --------------------------------------------------
+2024-09-10 23:20:19,909 EVALUATING: ITERATION 775
+2024-09-10 23:20:19,909 Train | Total Loss: 0.2307 | Task Loss: 0.2307 | Spatial Loss: 0.0000 | Acc Loss: 0.8906
+2024-09-10 23:20:19,909 Valid | Total Loss: 1.0176 | Task Loss: 1.0176 | Spatial Loss: 0.0000 | Acc Loss: 0.6641
+2024-09-10 23:20:29,156 --------------------------------------------------
+2024-09-10 23:20:29,156 EVALUATING: ITERATION 800
+2024-09-10 23:20:29,157 Train | Total Loss: 0.3121 | Task Loss: 0.3121 | Spatial Loss: 0.0000 | Acc Loss: 0.8672
+2024-09-10 23:20:29,157 Valid | Total Loss: 0.8670 | Task Loss: 0.8670 | Spatial Loss: 0.0000 | Acc Loss: 0.6328
+2024-09-10 23:20:29,605 Iter 800 | Loss: 0.3793 | Time: 576.06ms | MFU: 273.81%
+2024-09-10 23:20:39,162 --------------------------------------------------
+2024-09-10 23:20:39,162 EVALUATING: ITERATION 825
+2024-09-10 23:20:39,162 Train | Total Loss: 0.1908 | Task Loss: 0.1908 | Spatial Loss: 0.0000 | Acc Loss: 0.9219
+2024-09-10 23:20:39,162 Valid | Total Loss: 0.8288 | Task Loss: 0.8288 | Spatial Loss: 0.0000 | Acc Loss: 0.6484
+2024-09-10 23:20:48,579 --------------------------------------------------
+2024-09-10 23:20:48,579 EVALUATING: ITERATION 850
+2024-09-10 23:20:48,579 Train | Total Loss: 0.2568 | Task Loss: 0.2568 | Spatial Loss: 0.0000 | Acc Loss: 0.9141
+2024-09-10 23:20:48,579 Valid | Total Loss: 1.0401 | Task Loss: 1.0401 | Spatial Loss: 0.0000 | Acc Loss: 0.6328
+2024-09-10 23:20:49,013 Iter 850 | Loss: 0.3782 | Time: 585.38ms | MFU: 278.13%
+2024-09-10 23:20:58,785 --------------------------------------------------
+2024-09-10 23:20:58,785 EVALUATING: ITERATION 875
+2024-09-10 23:20:58,785 Train | Total Loss: 0.2800 | Task Loss: 0.2800 | Spatial Loss: 0.0000 | Acc Loss: 0.8906
+2024-09-10 23:20:58,785 Valid | Total Loss: 0.9297 | Task Loss: 0.9297 | Spatial Loss: 0.0000 | Acc Loss: 0.6484
+2024-09-10 23:21:08,370 --------------------------------------------------
+2024-09-10 23:21:08,370 EVALUATING: ITERATION 900
+2024-09-10 23:21:08,370 Train | Total Loss: 0.2141 | Task Loss: 0.2141 | Spatial Loss: 0.0000 | Acc Loss: 0.9141
+2024-09-10 23:21:08,370 Valid | Total Loss: 0.8305 | Task Loss: 0.8305 | Spatial Loss: 0.0000 | Acc Loss: 0.6875
+2024-09-10 23:21:08,656 Iter 900 | Loss: 0.2919 | Time: 387.36ms | MFU: 298.22%
+2024-09-10 23:21:18,143 --------------------------------------------------
+2024-09-10 23:21:18,143 EVALUATING: ITERATION 925
+2024-09-10 23:21:18,144 Train | Total Loss: 0.2248 | Task Loss: 0.2248 | Spatial Loss: 0.0000 | Acc Loss: 0.9062
+2024-09-10 23:21:18,144 Valid | Total Loss: 1.0094 | Task Loss: 1.0094 | Spatial Loss: 0.0000 | Acc Loss: 0.6562
+2024-09-10 23:21:28,320 --------------------------------------------------
+2024-09-10 23:21:28,320 EVALUATING: ITERATION 950
+2024-09-10 23:21:28,320 Train | Total Loss: 0.1915 | Task Loss: 0.1915 | Spatial Loss: 0.0000 | Acc Loss: 0.9375
+2024-09-10 23:21:28,320 Valid | Total Loss: 1.1097 | Task Loss: 1.1097 | Spatial Loss: 0.0000 | Acc Loss: 0.5859
+2024-09-10 23:21:28,697 Iter 950 | Loss: 0.2236 | Time: 457.11ms | MFU: 308.99%
+2024-09-10 23:21:38,396 --------------------------------------------------
+2024-09-10 23:21:38,396 EVALUATING: ITERATION 975
+2024-09-10 23:21:38,396 Train | Total Loss: 0.1721 | Task Loss: 0.1721 | Spatial Loss: 0.0000 | Acc Loss: 0.9297
+2024-09-10 23:21:38,396 Valid | Total Loss: 1.2102 | Task Loss: 1.2102 | Spatial Loss: 0.0000 | Acc Loss: 0.6641
+2024-09-10 23:21:47,461 --------------------------------------------------
+2024-09-10 23:21:47,461 EVALUATING: ITERATION 1000
+2024-09-10 23:21:47,461 Train | Total Loss: 0.2021 | Task Loss: 0.2021 | Spatial Loss: 0.0000 | Acc Loss: 0.8984
+2024-09-10 23:21:47,461 Valid | Total Loss: 1.3544 | Task Loss: 1.3544 | Spatial Loss: 0.0000 | Acc Loss: 0.6328
+2024-09-10 23:21:53,522 Starting new HTTPS connection (1): o151352.ingest.sentry.io:443
+2024-09-10 23:21:53,624 https://o151352.ingest.sentry.io:443 "POST /api/4504800232407040/envelope/ HTTP/11" 200 0

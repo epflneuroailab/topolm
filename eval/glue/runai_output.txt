@@ -1,0 +1,585 @@
+python: can't open file '/mnt/nrathi/topo-eval/eval/glue/1': [Errno 2] No such file or directory
+number of parameters: 127.97M
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 147, in <module>
+    logits, _, _, _, _ = model(X, attn_mask=attn_mask)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/mnt/nrathi/topo-eval/eval/glue/../../models/model.py", line 240, in forward
+    tok_emb = self.transformer.wte(idx) # token embeddings of shape (b, t, n_embed)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/nn/modules/sparse.py", line 163, in forward
+    return F.embedding(
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/nn/functional.py", line 2264, in embedding
+    return torch.embedding(weight, input, padding_idx, scale_grad_by_freq, sparse)
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cpu and cuda:0! (when checking argument for argument index in method wrapper_CUDA__index_select)
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 47, in <module>
+    num_labels = len(dataset['validation'].features['label'].names)
+AttributeError: 'Value' object has no attribute 'names'
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+number of parameters: 127.97M
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 166, in <module>
+    score = glue_metric(df['label'], df['prediction'], task=task)
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 129, in glue_metric
+    stacked = torch.stack((predictions, labels))
+TypeError: expected Tensor as element 0 in argument 0, but got Series
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+number of parameters: 127.97M
+model: nontopo-1 | task: stsb | score: 0.6713912660064524
+TASK: rte
+number of parameters: 127.97M
+model: nontopo-1 | task: rte | score: 0.516245487364621
+TASK: wnli
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 113, in <module>
+    checkpoint = torch.load(ckpt_path, map_location=device)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 997, in load
+    with _open_file_like(f, 'rb') as opened_file:
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 444, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 425, in __init__
+    super().__init__(open(name, mode))
+FileNotFoundError: [Errno 2] No such file or directory: '../../models/finetuned/wnli/nontopo-scale-1.pt'
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+number of parameters: 127.97M
+model: nontopo-1 | task: stsb | score: 0.6713912660064524
+TASK: rte
+number of parameters: 127.97M
+model: nontopo-1 | task: rte | score: 0.516245487364621
+TASK: sst2
+number of parameters: 127.97M
+model: nontopo-1 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: nontopo-1 | task: cola | score: 0.0926305279135704
+TASK: qqp
+number of parameters: 127.97M
+model: nontopo-1 | task: qqp | score: 0.8136664480352991
+TASK: mnli_matched
+Downloading data:   0%|          | 0.00/1.21M [00:00<?, ?B/s]Downloading data: 100%|██████████| 1.21M/1.21M [00:01<00:00, 1.08MB/s]Downloading data: 100%|██████████| 1.21M/1.21M [00:01<00:00, 1.07MB/s]
+Downloading data:   0%|          | 0.00/1.22M [00:00<?, ?B/s]Downloading data: 100%|██████████| 1.22M/1.22M [00:01<00:00, 977kB/s]Downloading data: 100%|██████████| 1.22M/1.22M [00:01<00:00, 969kB/s]
+Generating validation split:   0%|          | 0/9815 [00:00<?, ? examples/s]Generating validation split: 100%|██████████| 9815/9815 [00:00<00:00, 91212.64 examples/s]Generating validation split: 100%|██████████| 9815/9815 [00:00<00:00, 82703.54 examples/s]
+Generating test split:   0%|          | 0/9796 [00:00<?, ? examples/s]Generating test split: 100%|██████████| 9796/9796 [00:00<00:00, 399236.28 examples/s]
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 115, in <module>
+    checkpoint = torch.load(ckpt_path, map_location=device)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 1004, in load
+    with _open_zipfile_reader(opened_file) as opened_zipfile:
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 456, in __init__
+    super().__init__(torch._C.PyTorchFileReader(name_or_buffer))
+RuntimeError: PytorchStreamReader failed reading zip archive: failed finding central directory
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+number of parameters: 127.97M
+model: nontopo-1 | task: stsb | score: 0.6713912660064524
+TASK: rte
+number of parameters: 127.97M
+model: nontopo-1 | task: rte | score: 0.516245487364621
+TASK: sst2
+number of parameters: 127.97M
+model: nontopo-1 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: nontopo-1 | task: cola | score: 0.0926305279135704
+TASK: qqp
+number of parameters: 127.97M
+model: nontopo-1 | task: qqp | score: 0.8136664480352991
+TASK: mnli_matched
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 124, in <module>
+    checkpoint = torch.load(ckpt_path, map_location=device)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 1004, in load
+    with _open_zipfile_reader(opened_file) as opened_zipfile:
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 456, in __init__
+    super().__init__(torch._C.PyTorchFileReader(name_or_buffer))
+RuntimeError: PytorchStreamReader failed reading zip archive: failed finding central directory
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+number of parameters: 127.97M
+model: nontopo-1 | task: stsb | score: 0.6713912660064524
+TASK: rte
+number of parameters: 127.97M
+model: nontopo-1 | task: rte | score: 0.516245487364621
+TASK: sst2
+number of parameters: 127.97M
+model: nontopo-1 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: nontopo-1 | task: cola | score: 0.0926305279135704
+TASK: qqp
+number of parameters: 127.97M
+model: nontopo-1 | task: qqp | score: 0.8136664480352991
+TASK: qnli
+number of parameters: 127.97M
+model: nontopo-1 | task: qnli | score: 0.8207944352919642
+MODEL: topo-0
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-0 | task: mrpc | score: 0.81651376146789
+TASK: stsb
+number of parameters: 127.97M
+model: topo-0 | task: stsb | score: 0.6994672506014272
+TASK: rte
+number of parameters: 127.97M
+model: topo-0 | task: rte | score: 0.49097472924187724
+TASK: sst2
+number of parameters: 127.97M
+model: topo-0 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: topo-0 | task: cola | score: 0.143608957529068
+TASK: qqp
+number of parameters: 127.97M
+model: topo-0 | task: qqp | score: 0.8282840786012688
+TASK: qnli
+number of parameters: 127.97M
+model: topo-0 | task: qnli | score: 0.8167673439502106
+MODEL: topo-0.1
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-0.1 | task: mrpc | score: 0.8369230769230769
+TASK: stsb
+number of parameters: 127.97M
+model: topo-0.1 | task: stsb | score: 0.7183270558674166
+TASK: rte
+number of parameters: 127.97M
+model: topo-0.1 | task: rte | score: 0.5306859205776173
+TASK: sst2
+number of parameters: 127.97M
+model: topo-0.1 | task: sst2 | score: 0.8497706422018348
+TASK: cola
+number of parameters: 127.97M
+model: topo-0.1 | task: cola | score: 0.1618393361568451
+TASK: qqp
+number of parameters: 127.97M
+model: topo-0.1 | task: qqp | score: 0.7344572674573207
+TASK: qnli
+number of parameters: 127.97M
+model: topo-0.1 | task: qnli | score: 0.794801391177009
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 177, in <module>
+    score = glue_metric(df['label'], df['prediction'], task=task)
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 75, in glue_metric
+    return get_f1(labels, predictions)
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 66, in get_f1
+    return f1.item()
+AttributeError: 'float' object has no attribute 'item'
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 177, in <module>
+    score = glue_metric(df['label'], df['prediction'], task=task)
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 75, in glue_metric
+    return get_f1(labels, predictions)
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 66, in get_f1
+    return f1.item()
+AttributeError: 'float' object has no attribute 'item'
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+number of parameters: 127.97M
+model: nontopo-1 | task: stsb | score: 0.6713912660064524
+TASK: rte
+number of parameters: 127.97M
+model: nontopo-1 | task: rte | score: 0.516245487364621
+TASK: sst2
+number of parameters: 127.97M
+model: nontopo-1 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: nontopo-1 | task: cola | score: 0.0926305279135704
+TASK: qqp
+number of parameters: 127.97M
+model: nontopo-1 | task: qqp | score: 0.8136664480352991
+TASK: qnli
+number of parameters: 127.97M
+model: nontopo-1 | task: qnli | score: 0.8207944352919642
+MODEL: topo-0
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-0 | task: mrpc | score: 0.81651376146789
+TASK: stsb
+number of parameters: 127.97M
+model: topo-0 | task: stsb | score: 0.6994672506014272
+TASK: rte
+number of parameters: 127.97M
+model: topo-0 | task: rte | score: 0.49097472924187724
+TASK: sst2
+number of parameters: 127.97M
+model: topo-0 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: topo-0 | task: cola | score: 0.143608957529068
+TASK: qqp
+number of parameters: 127.97M
+model: topo-0 | task: qqp | score: 0.8282840786012688
+TASK: qnli
+number of parameters: 127.97M
+model: topo-0 | task: qnli | score: 0.8167673439502106
+MODEL: topo-0.1
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-0.1 | task: mrpc | score: 0.8369230769230769
+TASK: stsb
+number of parameters: 127.97M
+model: topo-0.1 | task: stsb | score: 0.7183270558674166
+TASK: rte
+number of parameters: 127.97M
+model: topo-0.1 | task: rte | score: 0.5306859205776173
+TASK: sst2
+number of parameters: 127.97M
+model: topo-0.1 | task: sst2 | score: 0.8497706422018348
+TASK: cola
+number of parameters: 127.97M
+model: topo-0.1 | task: cola | score: 0.1618393361568451
+TASK: qqp
+number of parameters: 127.97M
+model: topo-0.1 | task: qqp | score: 0.7344572674573207
+TASK: qnli
+number of parameters: 127.97M
+model: topo-0.1 | task: qnli | score: 0.814387699066447
+MODEL: topo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-1 | task: mrpc | score: 0.8256
+TASK: stsb
+number of parameters: 127.97M
+model: topo-1 | task: stsb | score: 0.7203610606655318
+TASK: rte
+number of parameters: 127.97M
+model: topo-1 | task: rte | score: 0.51985559566787
+TASK: sst2
+number of parameters: 127.97M
+model: topo-1 | task: sst2 | score: 0.8635321100917431
+TASK: cola
+number of parameters: 127.97M
+model: topo-1 | task: cola | score: 0.18455617129802704
+TASK: qqp
+number of parameters: 127.97M
+model: topo-1 | task: qqp | score: 0.8219631901840492
+TASK: qnli
+number of parameters: 127.97M
+model: topo-1 | task: qnli | score: 0.7979132344865458
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+number of parameters: 127.97M
+model: nontopo-1 | task: stsb | score: 0.6713912660064524
+TASK: rte
+number of parameters: 127.97M
+model: nontopo-1 | task: rte | score: 0.516245487364621
+TASK: sst2
+number of parameters: 127.97M
+model: nontopo-1 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: nontopo-1 | task: cola | score: 0.0926305279135704
+TASK: qqp
+number of parameters: 127.97M
+model: nontopo-1 | task: qqp | score: 0.8136664480352991
+TASK: qnli
+number of parameters: 127.97M
+model: nontopo-1 | task: qnli | score: 0.8207944352919642
+TASK: wnli
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 124, in <module>
+    checkpoint = torch.load(ckpt_path, map_location=device)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 997, in load
+    with _open_file_like(f, 'rb') as opened_file:
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 444, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/torch/serialization.py", line 425, in __init__
+    super().__init__(open(name, mode))
+FileNotFoundError: [Errno 2] No such file or directory: '../../models/finetuned/wnli/nontopo-scale-1.pt'
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+number of parameters: 127.97M
+model: nontopo-1 | task: stsb | score: 0.6713912660064524
+TASK: rte
+number of parameters: 127.97M
+model: nontopo-1 | task: rte | score: 0.516245487364621
+TASK: sst2
+number of parameters: 127.97M
+model: nontopo-1 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: nontopo-1 | task: cola | score: 0.0926305279135704
+TASK: qqp
+number of parameters: 127.97M
+model: nontopo-1 | task: qqp | score: 0.8136664480352991
+TASK: qnli
+number of parameters: 127.97M
+model: nontopo-1 | task: qnli | score: 0.8207944352919642
+TASK: mnli_matched
+number of parameters: 127.97M
+model: nontopo-1 | task: mnli_matched | score: 0.6366785532348447
+TASK: mnli_mismatched
+number of parameters: 127.97M
+model: nontopo-1 | task: mnli_mismatched | score: 0.6484947111472742
+MODEL: topo-0
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-0 | task: mrpc | score: 0.81651376146789
+TASK: stsb
+number of parameters: 127.97M
+model: topo-0 | task: stsb | score: 0.6994672506014272
+TASK: rte
+number of parameters: 127.97M
+model: topo-0 | task: rte | score: 0.49097472924187724
+TASK: sst2
+number of parameters: 127.97M
+model: topo-0 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: topo-0 | task: cola | score: 0.143608957529068
+TASK: qqp
+number of parameters: 127.97M
+model: topo-0 | task: qqp | score: 0.8282840786012688
+TASK: qnli
+number of parameters: 127.97M
+model: topo-0 | task: qnli | score: 0.8167673439502106
+TASK: wnli
+number of parameters: 127.97M
+model: topo-0 | task: wnli | score: 0.3380281690140845
+TASK: mnli_matched
+number of parameters: 127.97M
+model: topo-0 | task: mnli_matched | score: 0.713397860417728
+TASK: mnli_mismatched
+number of parameters: 127.97M
+model: topo-0 | task: mnli_mismatched | score: 0.7294548413344182
+MODEL: topo-0.1
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-0.1 | task: mrpc | score: 0.8369230769230769
+TASK: stsb
+number of parameters: 127.97M
+model: topo-0.1 | task: stsb | score: 0.7183270558674166
+TASK: rte
+number of parameters: 127.97M
+model: topo-0.1 | task: rte | score: 0.5306859205776173
+TASK: sst2
+number of parameters: 127.97M
+model: topo-0.1 | task: sst2 | score: 0.8497706422018348
+TASK: cola
+number of parameters: 127.97M
+model: topo-0.1 | task: cola | score: 0.1618393361568451
+TASK: qqp
+number of parameters: 127.97M
+model: topo-0.1 | task: qqp | score: 0.7344572674573207
+TASK: qnli
+number of parameters: 127.97M
+model: topo-0.1 | task: qnli | score: 0.814387699066447
+TASK: wnli
+number of parameters: 127.97M
+model: topo-0.1 | task: wnli | score: 0.39436619718309857
+TASK: mnli_matched
+number of parameters: 127.97M
+model: topo-0.1 | task: mnli_matched | score: 0.751808456444218
+TASK: mnli_mismatched
+number of parameters: 127.97M
+model: topo-0.1 | task: mnli_mismatched | score: 0.7639340927583401
+MODEL: topo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-1 | task: mrpc | score: 0.8256
+TASK: stsb
+number of parameters: 127.97M
+model: topo-1 | task: stsb | score: 0.7153150122397753
+TASK: rte
+number of parameters: 127.97M
+model: topo-1 | task: rte | score: 0.51985559566787
+TASK: sst2
+number of parameters: 127.97M
+model: topo-1 | task: sst2 | score: 0.8635321100917431
+TASK: cola
+number of parameters: 127.97M
+model: topo-1 | task: cola | score: 0.18455617129802704
+TASK: qqp
+number of parameters: 127.97M
+model: topo-1 | task: qqp | score: 0.8219631901840492
+TASK: qnli
+number of parameters: 127.97M
+model: topo-1 | task: qnli | score: 0.7979132344865458
+TASK: wnli
+number of parameters: 127.97M
+model: topo-1 | task: wnli | score: 0.19718309859154928
+TASK: mnli_matched
+number of parameters: 127.97M
+model: topo-1 | task: mnli_matched | score: 0.689047376464595
+TASK: mnli_mismatched
+number of parameters: 127.97M
+model: topo-1 | task: mnli_mismatched | score: 0.7050447518307568
+Traceback (most recent call last):
+  File "/mnt/nrathi/topo-eval/eval/glue/eval_glue.py", line 189, in <module>
+    df = pd.DataFrame(scores)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/pandas/core/frame.py", line 778, in __init__
+    mgr = dict_to_mgr(data, index, columns, dtype=dtype, copy=copy, typ=manager)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/pandas/core/internals/construction.py", line 503, in dict_to_mgr
+    return arrays_to_mgr(arrays, columns, index, dtype=dtype, typ=typ, consolidate=copy)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/pandas/core/internals/construction.py", line 114, in arrays_to_mgr
+    index = _extract_index(arrays)
+  File "/mnt/nrathi/miniconda3/envs/topo/lib/python3.10/site-packages/pandas/core/internals/construction.py", line 677, in _extract_index
+    raise ValueError("All arrays must be of the same length")
+ValueError: All arrays must be of the same length
+MODEL: nontopo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: nontopo-1 | task: mrpc | score: 0.8134110787172011
+TASK: stsb
+number of parameters: 127.97M
+model: nontopo-1 | task: stsb | score: 0.6713912660064524
+TASK: rte
+number of parameters: 127.97M
+model: nontopo-1 | task: rte | score: 0.516245487364621
+TASK: sst2
+number of parameters: 127.97M
+model: nontopo-1 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: nontopo-1 | task: cola | score: 0.0926305279135704
+TASK: qqp
+number of parameters: 127.97M
+model: nontopo-1 | task: qqp | score: 0.8136664480352991
+TASK: qnli
+number of parameters: 127.97M
+model: nontopo-1 | task: qnli | score: 0.8207944352919642
+TASK: mnli_matched
+number of parameters: 127.97M
+model: nontopo-1 | task: mnli_matched | score: 0.6366785532348447
+TASK: mnli_mismatched
+number of parameters: 127.97M
+model: nontopo-1 | task: mnli_mismatched | score: 0.6484947111472742
+MODEL: topo-0
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-0 | task: mrpc | score: 0.81651376146789
+TASK: stsb
+number of parameters: 127.97M
+model: topo-0 | task: stsb | score: 0.6994672506014272
+TASK: rte
+number of parameters: 127.97M
+model: topo-0 | task: rte | score: 0.49097472924187724
+TASK: sst2
+number of parameters: 127.97M
+model: topo-0 | task: sst2 | score: 0.8543577981651376
+TASK: cola
+number of parameters: 127.97M
+model: topo-0 | task: cola | score: 0.143608957529068
+TASK: qqp
+number of parameters: 127.97M
+model: topo-0 | task: qqp | score: 0.8282840786012688
+TASK: qnli
+number of parameters: 127.97M
+model: topo-0 | task: qnli | score: 0.8167673439502106
+TASK: wnli
+number of parameters: 127.97M
+model: topo-0 | task: wnli | score: 0.3380281690140845
+TASK: mnli_matched
+number of parameters: 127.97M
+model: topo-0 | task: mnli_matched | score: 0.713397860417728
+TASK: mnli_mismatched
+number of parameters: 127.97M
+model: topo-0 | task: mnli_mismatched | score: 0.7294548413344182
+MODEL: topo-0.1
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-0.1 | task: mrpc | score: 0.8369230769230769
+TASK: stsb
+number of parameters: 127.97M
+model: topo-0.1 | task: stsb | score: 0.7183270558674166
+TASK: rte
+number of parameters: 127.97M
+model: topo-0.1 | task: rte | score: 0.5306859205776173
+TASK: sst2
+number of parameters: 127.97M
+model: topo-0.1 | task: sst2 | score: 0.8497706422018348
+TASK: cola
+number of parameters: 127.97M
+model: topo-0.1 | task: cola | score: 0.1618393361568451
+TASK: qqp
+number of parameters: 127.97M
+model: topo-0.1 | task: qqp | score: 0.7344572674573207
+TASK: qnli
+number of parameters: 127.97M
+model: topo-0.1 | task: qnli | score: 0.814387699066447
+TASK: wnli
+number of parameters: 127.97M
+model: topo-0.1 | task: wnli | score: 0.39436619718309857
+TASK: mnli_matched
+number of parameters: 127.97M
+model: topo-0.1 | task: mnli_matched | score: 0.751808456444218
+TASK: mnli_mismatched
+number of parameters: 127.97M
+model: topo-0.1 | task: mnli_mismatched | score: 0.7639340927583401
+MODEL: topo-1
+TASK: mrpc
+number of parameters: 127.97M
+model: topo-1 | task: mrpc | score: 0.8256
+TASK: stsb
+number of parameters: 127.97M
+model: topo-1 | task: stsb | score: 0.7153150122397753
+TASK: rte
+number of parameters: 127.97M
+model: topo-1 | task: rte | score: 0.51985559566787
+TASK: sst2
+number of parameters: 127.97M
+model: topo-1 | task: sst2 | score: 0.8635321100917431
+TASK: cola
+number of parameters: 127.97M
+model: topo-1 | task: cola | score: 0.18455617129802704
+TASK: qqp
+number of parameters: 127.97M
+model: topo-1 | task: qqp | score: 0.8219631901840492
+TASK: qnli
+number of parameters: 127.97M
+model: topo-1 | task: qnli | score: 0.7979132344865458
+TASK: wnli
+number of parameters: 127.97M
+model: topo-1 | task: wnli | score: 0.19718309859154928
+TASK: mnli_matched
+number of parameters: 127.97M
+model: topo-1 | task: mnli_matched | score: 0.689047376464595
+TASK: mnli_mismatched
+number of parameters: 127.97M
+model: topo-1 | task: mnli_mismatched | score: 0.7050447518307568

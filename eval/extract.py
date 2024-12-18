@@ -80,12 +80,14 @@ if __name__ == "__main__":
     cfg = OmegaConf.load(cfg_file)
     cfg.update(OmegaConf.from_cli())
 
-    params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
-    params = '-'.join([str(p) for p in params])
+    # params = [cfg.radius, cfg.neighborhoods, cfg.alpha, cfg.batch_size, cfg.accum, cfg.decay]
+    # params = '-'.join([str(p) for p in params])
+    name = cfg.name
 
-    checkpoint = torch.load(MODEL_DIR + 'ckpt-' + params + '.pt', map_location=device)
+    checkpoint = torch.load(MODEL_DIR + name + '.pt', map_location=device)
     model_args = checkpoint['model_args']
-    model_args['position_dir'] = '../models/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods) + '/'
+    model_args['position_dir'] = '../models/gpt2-positions/gpt2-positions-' + str(cfg.radius) + '-' + str(cfg.neighborhoods) + '/'
+    model_args['with_resid'] = cfg.with_resid
 
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
@@ -147,7 +149,7 @@ if __name__ == "__main__":
         final_layer_representations['non-words'][layer] = torch.stack(activations[layer][:num_samples])
         final_layer_representations['sentences'][layer] = torch.stack(activations[layer][num_samples:])
 
-    savedir = SAVE_PATH + params
+    savedir = SAVE_PATH + name
     os.makedirs(savedir, exist_ok = True)
 
     with open(os.path.expanduser(savedir + '/extract.pkl'), 'wb') as f:

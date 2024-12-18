@@ -1,0 +1,11 @@
+2024-09-11 13:14:24,912 GPTConfig(block_size=1024, vocab_size=50304, n_layer=12, n_head=16, n_embed=784, dropout=0.1, bias=False, position_dir='gpt2-positions/gpt2-positions-5-5', alpha=2.5, accum='mean', activation_decay=0, head_loss=False, attn_proj=False, finetune=True, is_regression=True, with_resid=True)
+2024-09-11 13:14:25,799 --------------------------------------------------
+2024-09-11 13:14:25,799 EVALUATING: ITERATION 0
+2024-09-11 13:14:25,799 Train | Total Loss: 31.9992 | Task Loss: 10.7486 | Spatial Loss: 21.2505 | Acc Loss: 0.0000
+2024-09-11 13:14:25,799 Valid | Total Loss: 27.4713 | Task Loss: 6.4584 | Spatial Loss: 21.0128 | Acc Loss: 0.0000
+2024-09-11 13:14:25,801 --------------------------------------------------
+2024-09-11 13:14:32,368 Iter 0 | Loss: 33.7531 | Time: 6954.19ms | MFU: -100.00%
+2024-09-11 13:14:38,885 Iter 1 | Loss: 28.9001 | Time: 6516.97ms | MFU: -100.00%
+2024-09-11 13:14:45,174 Iter 2 | Loss: 27.9463 | Time: 6288.33ms | MFU: -100.00%
+2024-09-11 13:14:52,507 Iter 3 | Loss: 24.5347 | Time: 7333.61ms | MFU: -100.00%
+2024-09-11 13:14:59,645 Iter 4 | Loss: 25.8576 | Time: 7137.71ms | MFU: -100.00%

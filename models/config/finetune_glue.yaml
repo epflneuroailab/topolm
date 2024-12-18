@@ -3,14 +3,15 @@
 # $ torchrun --standalone --nproc_per_node=8 train.py config/train_gpt2.py
 
 # I/O
-ckpt: "'run-5-5-2.5-48-mean-0/ckpt-759.pt'"
-always_save_checkpoint: True # if True, always save a checkpoint after each eval
+ckpt: "'preresid-run-5-5-2.5-48-mean-0/ckpt-311.pt'"
+alpha_scale: 1
+model_name: 'topo'
+early_stop_point: 3
 
 # eval / logging stuff
 eval_interval: 25
-eval_iters: 50
-save_interval: 50
-log_interval: 50
+eval_iters: 100
+log_interval: 25
 eval_only: False # if True, script exits right after the first eval
 
 # data
@@ -19,7 +20,7 @@ task: 'cola'
 
 # these make the total batch size be ~0.3M
 # 48 batch size * 4 minibatches * ~80 block size * 5 gradaccum * 4 GPUs: 307200
-batch_size: 128
+batch_size: 64
 n_batches: 1
 gradient_accumulation_steps: 5 * 2
 

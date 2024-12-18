@@ -1,10 +1,11 @@
-swapopt: True
+swapopt: False
+bert: False
 
 local_steps: 50
 neighborhoods_per_batch: 5
 
 batch_size: 12
-n_layer: 12
+n_layer: 16 # 12
 n_head: 1
 n_embed: 784
 block_size: 4

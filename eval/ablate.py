@@ -1,34 +1,60 @@
 """
-Sample from a trained model
+example script for running language mask ablations on blimp
 """
+
 import os
 import sys
-import pickle as pkl
-from contextlib import nullcontext
-import torch
-import tiktoken
 
-import numpy as np 
 import torch
+import torch.nn.functional as F
+from contextlib import nullcontext
+
+import tiktoken
+import itertools
+
+import numpy as np
+import pandas as pd
+import pickle as pkl
+
+from omegaconf import OmegaConf
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'models'))
 import positions
-from model import GPTConfig, GPT
+from model import GPT, GPTConfig
 
-num_units = 784
+cfg = OmegaConf.from_cli()
+model_name = cfg.name
 
-# -----------------------------------------------------------------------------
-model_file = '../models/out/ckpt-5-5-0-48-mean-0.pt'
-init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-out_dir = 'out' # ignored if init_from is not 'resume'
-num_samples = 1 # number of samples to draw
-max_new_tokens = 50 # number of tokens generated in each sample
-temperature = 1.0 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
-top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
-seed = 42
-device = 'cpu' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
-dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
-# -----------------------------------------------------------------------------
+all_dfs = []
+
+for filename in os.listdir('blimp/data/'):
+    
+    if not filename.endswith('.jsonl'):
+        continue
+
+    f = open(f'blimp/data/{filename}', 'r')
+    cur_df = pd.read_json(f, lines=True)
+    all_dfs.append(cur_df)
+
+blimp = pd.concat(all_dfs).reset_index(drop=True)
+blimp = blimp[['sentence_good', 'sentence_bad', 'field', 'linguistics_term', 'UID']]
+
+num_samples    = 1
+max_new_tokens = 50
+temperature    = 1.0
+seed           = 42
+
+model_name = 'preresid'
+
+if model_name == 'preresid':
+    model_file = f'../models/out/preresid-run-5-5-2.5-48-mean-0/ckpt-311.pt'
+elif model_name == 'nontopo':
+    model_file = f'../models/out/run-5-5-0-48-mean-0/ckpt-399.pt'
+else:
+    raise Exception("Invalid model name.")
+
+device = 'cuda'
+dtype  = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16'
 
 torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
@@ -58,73 +84,76 @@ layer_names = []
 for i in range(12):
     layer_names += [f'transformer.h.{i}.attn.c_attn.weight', f'transformer.h.{i}.mlp.c_fc.weight']
 
-with open(f'data/localizer/5-5-0-48-mean-0/lmask.pkl', 'rb') as f:
-    language_mask = pkl.load(f)
-
-language_mask = torch.tensor(1 - language_mask, dtype=torch.float32)
+original_params = {}
 
 for name, param in model.named_parameters():
     if name in layer_names:
-        if param.shape[-1] == 784:
-            param.data *= language_mask[i]
-        elif param.shape[0] == 784:
-            param.data *= language_mask[i].view(-1, 1)
+        original_params[name] = param.data
+
+with open(f'data/localizer/{model_name}/lmask.pkl', 'rb') as f:
+    selectivity = pkl.load(f)
 
 enc = tiktoken.get_encoding("gpt2")
-encode = lambda s: enc.encode(s, allowed_special={"<|endoftext|>"})
-decode = lambda l: enc.decode(l)
+pad_token = enc.encode('<|endoftext|>', allowed_special="all")[0]
 
-prompt = 'the'
+def is_topk(a, k=1):
+    _, rix = np.unique(-a, return_inverse=True)
+    return np.where(rix < k, 1, 0).reshape(a.shape)
 
-start_ids = encode(prompt)
-x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
+@torch.no_grad()
+def surprisal(model, tokens):
+    """
+    compute surprisal of a batch of tokens
+    """
+    B, L = tokens.shape
+    context = tokens[:, 0].unsqueeze(1)
+    surp = torch.zeros(B)
+    
+    for i in range(L - 1):
+        
+        logits, _, _, _, _ = model(context)
+        logits = logits[:, -1, :].to('cpu')
+        probs = F.softmax(logits, dim=-1)
+        
+        next_token = tokens[:, i + 1].to('cpu')
+        surp += -torch.log(probs[range(B), next_token])
+        
+        # append sampled index to the running sequence and continue
+        context = torch.cat((context, tokens[:, i + 1].unsqueeze(1)), dim=1)
 
-print('TOP-K MASK:')
-# run generation
-with torch.no_grad():
-    with ctx:
-        for k in range(num_samples):
-            y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
-            print(decode(y[0].tolist()))
-            print('---------------')
+    return surp
 
-checkpoint = torch.load(model_file, map_location=device)
-model_args = checkpoint['model_args']
-model_args['position_dir'] = '../models/gpt2-positions-5-5'
+def tokenize_batch(sents):
+    tokens = enc.encode_batch(sents, allowed_special = 'all')
+    padded = list(zip(*itertools.zip_longest(*tokens, fillvalue=pad_token)))
+    return torch.from_numpy(np.array(padded)).to(device)
 
-gptconf = GPTConfig(**model_args)
-model = GPT(gptconf)
-state_dict = checkpoint['model']
-unwanted_prefix = '_orig_mod.'
-for k,v in list(state_dict.items()):
-    if k.startswith(unwanted_prefix):
-        state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
-model.load_state_dict(state_dict)
+def blimp_score(model):
+    
+    good_surps = []
+    bad_surps = []
+    
+    batch_size = 48
 
-model.eval()
-model.to(device)
+    for i in range(0, len(blimp), batch_size):
+        batch_df = blimp.iloc[i:i + batch_size]
+        
+        good_surps += list(surprisal(model, tokenize_batch(batch_df['sentence_good'])))
+        bad_surps += list(surprisal(model, tokenize_batch(batch_df['sentence_bad'])))
+    
+    return good_surps, bad_surps
 
-random_mask = torch.zeros(24 * 784, dtype=torch.float32)
-random_indices = torch.randperm(24 * 784)[:num_units]
-random_mask[random_indices] = 1
-random_mask = 1 - random_mask.view(24, 784)
+for k in [1, 28, 196, 392, 784, 1568, 3136, 12544]:
 
-for name, param in model.named_parameters():
-    if name in layer_names:
-        if param.shape[-1] == 784:
-            param.data *= random_mask[i]
-        elif param.shape[0] == 784:
-            param.data *= random_mask[i].view(-1, 1)
+    language_mask = torch.tensor(1 - is_topk(selectivity, k), dtype=torch.float32).to(device)
 
-prompt = 'the'
+    i = 0
+    for name, param in model.named_parameters():
+        if name in layer_names:
+            param.data = original_params[name] * language_mask[i]
+            i += 1
 
-start_ids = encode(prompt)
-x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
+    good_surps, bad_surps = blimp_score(model)
+    blimp[f'correct_{k}'] = np.array(good_surps) < np.array(bad_surps)
 
-print('RANDOM MASK:')
-# run generation
-with torch.no_grad():
-    with ctx:
-        for k in range(num_samples):
-            y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
-            print(decode(y[0].tolist()))
+    blimp.to_csv(f'ablation/{model_name}_blimp_results.csv')
