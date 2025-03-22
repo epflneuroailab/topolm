@@ -15,3 +15,6 @@ you can install all python dependencies with `pip3 install -r requirements.txt`
 * matplotlib, seaborn
 * esda, libpysal (for moran's I computation)
 * pandas, numpy v2.x, scipy
+
+## trained models
+you can access the models we trained / analyzed in the paper [here](https://drive.google.com/drive/u/1/folders/1CM4cElxPoPuIA4eaSwr11959H8IKiVES).
